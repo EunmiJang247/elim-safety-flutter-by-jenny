@@ -369,7 +369,6 @@ class FaultItemCard extends StatelessWidget {
       onTap: () {
         appService.selectedFault.value = fault;
         appService.isFaultSelected.value = true;
-        drawingDetailController.closeNumberDrawer(context);
       },
       child: Container(
         height: _cardHeight,

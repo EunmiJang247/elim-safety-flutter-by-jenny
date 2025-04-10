@@ -131,6 +131,20 @@ class _FaultDrawerState extends State<FaultDrawer> {
                             children: [
                               InkWell(
                                 onTap: () async {
+                                  drawingDetailController
+                                      .closeFaultDrawer(context);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 10.0),
+                                  child: Icon(
+                                    Icons.arrow_back_ios,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () async {
                                   CustomPicture? newImage =
                                       await drawingDetailController.takePicture(
                                           appService.selectedFault.value);
@@ -410,6 +424,8 @@ class _FaultDrawerState extends State<FaultDrawer> {
                                   onTap: () {
                                     drawingDetailController
                                         .closeFaultDrawer(context);
+                                    drawingDetailController
+                                        .closeNumberDrawer(context);
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
