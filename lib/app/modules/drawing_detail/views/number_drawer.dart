@@ -318,16 +318,29 @@ class _NumberDrawerState extends State<NumberDrawer> {
     );
   }
 
+  void sortFaultsByCloneGroup(List<Fault> faults) {
+    faults.sort((a, b) {
+      // 1. group_fid를 기준으로 먼저 묶고
+      final groupCompare = (a.group_fid ?? '').compareTo(b.group_fid ?? '');
+      if (groupCompare != 0) return groupCompare;
+
+      // 2. 같은 그룹이라면 등록시간 순으로 정렬
+      return (a.reg_time ?? '').compareTo(b.reg_time ?? '');
+    });
+  }
+
   // 결함 목록 위젯
   Widget _buildFaultList() {
+    List<Fault> sortedFaults = [...faultList];
+    sortFaultsByCloneGroup(sortedFaults);
     return Expanded(
       child: Container(
         padding: EdgeInsets.only(left: 16, top: 16, right: 16),
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: faultList.length,
+          itemCount: sortedFaults.length,
           itemBuilder: (context, index) => FaultItemCard(
-            fault: faultList[index],
+            fault: sortedFaults[index],
             drawingDetailController: drawingDetailController,
             appService: appService,
           ),
