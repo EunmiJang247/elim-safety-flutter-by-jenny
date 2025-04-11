@@ -714,8 +714,8 @@ class _DrawingViewState extends State<DrawingView> {
                           drawingDetailController.selectedMarker.value = marker;
                           drawingDetailController
                               .appService.selectedFault.value = fault;
-                          drawingDetailController
-                              .appService.isFaultSelected.value = true;
+                          drawingDetailController.isNumberSelected.value = true;
+                          drawingDetailController.isPointSelected.value = true;
                         },
                         onLongPressStart: (details) {
                           if (currentScale >= scaleStd) {

@@ -48,6 +48,7 @@ class DrawingDetailController extends GetxController {
   RxBool isDrawingSelected = true.obs;
 
   RxBool isNumberSelected = false.obs;
+  RxBool isPointSelected = false.obs;
   Rx<Marker> selectedMarker = Rx(Marker(no: "1"));
   RxBool clrPickerOpened = false.obs;
 
@@ -693,6 +694,7 @@ class DrawingDetailController extends GetxController {
     tempCate1.value = "";
     tempCate2.value = "";
     appService.isFaultSelected.value = false;
+    isPointSelected.value = false;
   }
 
   void closeNumberDrawer(context) {
@@ -701,6 +703,7 @@ class DrawingDetailController extends GetxController {
     tempCate1.value = "";
     tempCate2.value = "";
     isNumberSelected.value = false;
+    isPointSelected.value = false;
   }
 
   void checkImage(CustomPicture picture) {

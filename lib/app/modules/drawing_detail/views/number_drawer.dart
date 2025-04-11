@@ -270,7 +270,10 @@ class _NumberDrawerState extends State<NumberDrawer> {
   // 닫기 버튼
   Widget _buildCloseButton() {
     return InkWell(
-      onTap: () => drawingDetailController.closeNumberDrawer(context),
+      onTap: () {
+        drawingDetailController.closeNumberDrawer(context);
+        drawingDetailController.isPointSelected.value = false;
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
         child: Icon(
@@ -318,7 +321,7 @@ class _NumberDrawerState extends State<NumberDrawer> {
     );
   }
 
-  void sortFaultsByCloneGroup(List<Fault> faults) {
+  void _sortFaultsByCloneGroup(List<Fault> faults) {
     faults.sort((a, b) {
       // 1. group_fid를 기준으로 먼저 묶고
       final groupCompare = (a.group_fid ?? '').compareTo(b.group_fid ?? '');
@@ -329,10 +332,20 @@ class _NumberDrawerState extends State<NumberDrawer> {
     });
   }
 
+  List<Fault> _filterChildFaults(List<Fault> faults, String fid) {
+    return faults.where((fault) => fault.group_fid == fid).toList();
+  }
+
   // 결함 목록 위젯
   Widget _buildFaultList() {
     List<Fault> sortedFaults = [...faultList];
-    sortFaultsByCloneGroup(sortedFaults);
+    _sortFaultsByCloneGroup(sortedFaults);
+
+    if (drawingDetailController.appService.selectedFault.value.fid != null &&
+        drawingDetailController.isPointSelected.value) {
+      String fid = drawingDetailController.appService.selectedFault.value.fid!;
+      sortedFaults = _filterChildFaults(sortedFaults, fid);
+    }
     return Expanded(
       child: Container(
         padding: EdgeInsets.only(left: 16, top: 16, right: 16),
@@ -382,6 +395,7 @@ class FaultItemCard extends StatelessWidget {
       onTap: () {
         appService.selectedFault.value = fault;
         appService.isFaultSelected.value = true;
+        drawingDetailController.isPointSelected.value = false;
       },
       child: Container(
         height: _cardHeight,
