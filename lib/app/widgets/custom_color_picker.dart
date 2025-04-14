@@ -69,17 +69,17 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                     onTap: () {
                       if (!drawingDetailController
                           .isMarkerColorChanging.value) {
-                        // appService.selectedFault.value.color =
-                        //     intToHex(colors[index].toARGB32());
+                        appService.selectedFault.value.color =
+                            intToHex(colors[index].value);
                       } else if (drawingDetailController
                           .isBorderColorChanging.value) {
                         for (Marker marker
                             in drawingDetailController.markerList) {
                           if (marker.no ==
                               drawingDetailController.selectedMarker.value.no) {
-                            //  marker.outline_color =
-                            //      intToHex(colors[index].toARGB32());
-                            //  drawingDetailController.editMarker(marker);
+                            marker.outline_color =
+                                intToHex(colors[index].value);
+                            drawingDetailController.editMarker(marker);
                           }
                         }
                       } else {
@@ -87,9 +87,9 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                             in drawingDetailController.markerList) {
                           if (marker.no ==
                               drawingDetailController.selectedMarker.value.no) {
-                            //  marker.foreground_color =
-                            //     intToHex(colors[index].toARGB32());
-                            //  drawingDetailController.editMarker(marker);
+                            marker.foreground_color =
+                                intToHex(colors[index].value);
+                            drawingDetailController.editMarker(marker);
                           }
                         }
                       }

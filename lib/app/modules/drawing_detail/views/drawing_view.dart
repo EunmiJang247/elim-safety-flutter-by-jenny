@@ -456,7 +456,9 @@ class _DrawingViewState extends State<DrawingView> {
           getColorWithCache(data.foreground_color ?? "FFFFFF");
 
       Color textColor = foregroundColor == Color.fromARGB(255, 136, 136, 202) ||
-              foregroundColor == Color(0xffff0000)
+              foregroundColor == Color(0xffff0000) ||
+              foregroundColor == Color(0xff0909ff) ||
+              foregroundColor == Color(0xff4caf50)
           ? Colors.white
           : Colors.black;
 
