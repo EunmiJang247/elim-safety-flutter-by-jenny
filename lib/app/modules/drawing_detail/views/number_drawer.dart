@@ -447,45 +447,49 @@ class FaultItemCard extends StatelessWidget {
         appService.selectedFault.value = fault;
         appService.isFaultSelected.value = true;
       },
-      child: Container(
-        height: _cardHeight,
-        margin: const EdgeInsets.only(bottom: _cardMarginBottom),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 1),
-              blurRadius: 2,
-              spreadRadius: -1,
+      child: Padding(
+        padding: (fault.group_fid != fault.fid)
+            ? const EdgeInsets.fromLTRB(12, 0, 0, 0)
+            : EdgeInsets.zero,
+        child: Container(
+            height: _cardHeight,
+            margin: const EdgeInsets.only(bottom: _cardMarginBottom),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 1),
+                  blurRadius: 2,
+                  spreadRadius: -1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 1),
+                  blurRadius: 3,
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 4),
+                  blurRadius: 6,
+                  spreadRadius: -4,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 10),
+                  blurRadius: 15,
+                  spreadRadius: -3,
+                ),
+              ],
             ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 1),
-              blurRadius: 3,
-              spreadRadius: 0,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 4),
-              blurRadius: 6,
-              spreadRadius: -4,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 10),
-              blurRadius: 15,
-              spreadRadius: -3,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _buildThumbnail(thumb),
-            Expanded(child: _buildFaultDetails()),
-          ],
-        ),
+            child: Row(
+              children: [
+                _buildThumbnail(thumb),
+                Expanded(child: _buildFaultDetails()),
+              ],
+            )),
       ),
     );
   }
