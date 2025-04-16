@@ -783,6 +783,7 @@ class _DrawingViewState extends State<DrawingView> {
 
                           // 함께 이동하는 경우
                           if (isMoveTogether) {
+                            fixRange = 0;
                             setState(() {
                               // 마커 이동
                               markerSnapped = moveMarker(
@@ -797,6 +798,7 @@ class _DrawingViewState extends State<DrawingView> {
                               fault.y =
                                   convertDVtoDB(y: newMarkerPos.dy + dY).first;
                             });
+                            fixRange = 5;
                           }
                           // 독립적으로 이동하는 경우 (기존 코드)
                           else {
