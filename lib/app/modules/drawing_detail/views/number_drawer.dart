@@ -288,7 +288,6 @@ class _NumberDrawerState extends State<NumberDrawer> {
     return InkWell(
       onTap: () {
         drawingDetailController.closeNumberDrawer(context);
-        drawingDetailController.isPointSelected.value = false;
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
@@ -447,7 +446,6 @@ class FaultItemCard extends StatelessWidget {
       onTap: () {
         appService.selectedFault.value = fault;
         appService.isFaultSelected.value = true;
-        drawingDetailController.isPointSelected.value = false;
       },
       child: Container(
         height: _cardHeight,

@@ -780,7 +780,6 @@ class DrawingDetailController extends GetxController {
     tempCate1.value = "";
     tempCate2.value = "";
     appService.isFaultSelected.value = false;
-    isPointSelected.value = false;
   }
 
   void closeNumberDrawer(context) {
