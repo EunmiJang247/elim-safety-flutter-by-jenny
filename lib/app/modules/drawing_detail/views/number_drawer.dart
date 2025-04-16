@@ -180,6 +180,7 @@ class _NumberDrawerState extends State<NumberDrawer> {
         _buildOutlineColorButton(),
         _buildForegroundColorButton(),
         _buildDeleteButton(),
+        _buildDetachButton(),
         _buildCloseButton(),
       ],
     );
@@ -267,6 +268,21 @@ class _NumberDrawerState extends State<NumberDrawer> {
     );
   }
 
+  // 분리 버튼
+  Widget _buildDetachButton() {
+    return InkWell(
+      onTap: () => _showDetachDialog(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 10.0),
+        child: Icon(
+          FontAwesomeIcons.linkSlash,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
   // 닫기 버튼
   Widget _buildCloseButton() {
     return InkWell(
@@ -281,6 +297,42 @@ class _NumberDrawerState extends State<NumberDrawer> {
           color: Colors.white,
           size: 24,
         ),
+      ),
+    );
+  }
+
+  // 분리 확인 다이얼로그
+  void _showDetachDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => TwoButtonDialog(
+        height: 200,
+        content: Column(
+          children: [
+            Text(
+              "마커 분리",
+              style: TextStyle(
+                fontFamily: "Pretendard",
+                color: AppColors.c1,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
+            Gaps.h16,
+            Text(
+              "'${drawingDetailController.selectedMarker.value.no}'번을 분리하시겠습니까? \n",
+              style: TextStyle(fontFamily: "Pretendard", fontSize: 18),
+              textAlign: TextAlign.center,
+            )
+          ],
+        ),
+        yes: "분리",
+        no: "취소",
+        onYes: () {
+          drawingDetailController.detachMarker();
+          Get.back();
+        },
+        onNo: () => Get.back(),
       ),
     );
   }

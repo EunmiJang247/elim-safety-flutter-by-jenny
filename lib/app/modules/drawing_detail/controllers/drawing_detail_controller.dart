@@ -455,6 +455,92 @@ class DrawingDetailController extends GetxController {
     countFaults();
   }
 
+  // 마커 분리
+  Future<void> detachMarker() async {
+    Marker originMarker = selectedMarker.value;
+    Map<String, List<Fault>> groupedByFid = {};
+    for (Fault fault in originMarker.fault_list ?? []) {
+      String group_fid = fault.group_fid ?? "";
+      if (!groupedByFid.containsKey(group_fid)) {
+        groupedByFid[group_fid] = [];
+      }
+      groupedByFid[group_fid]!.add(fault);
+    }
+    if (groupedByFid.length == 1) {
+      Fluttertoast.showToast(msg: "결함이 한 종류일 땐 분리할 수 없습니다.");
+      return;
+    }
+
+    int idx = 0;
+    for (String groupFid in groupedByFid.keys) {
+      if (idx == 0) {
+        idx++;
+        continue;
+      }
+      List<Fault> faults = groupedByFid[groupFid]!;
+      String newX = (double.tryParse(faults[0].x ?? "0")?.toStringAsFixed(5)) ??
+          "0.00000";
+      String newY = (((double.tryParse(faults[0].y ?? "0") ?? 0) - 0.05)
+              .toStringAsFixed(5)) ??
+          "0.00000";
+      Marker newMarker = Marker(
+        drawing_seq: originMarker.drawing_seq,
+        x: newX,
+        y: newY,
+        mid: appService.createId(),
+      );
+      String? lastFaultSeq;
+      if (faultList.isNotEmpty) {
+        lastFaultSeq = faultList.last.seq;
+      }
+
+      Map? result = await appService.submitMarker(
+          isNew: true, marker: newMarker, lastFaultSeq: lastFaultSeq);
+      if (result != null) {
+        Marker resultMarker = result["marker"];
+        resultMarker.fault_list = [];
+        resultMarker.fault_cnt = 0;
+        markerList.add(resultMarker);
+        if (result["appended"] != null) {
+          applyChanges(result["appended"]);
+        }
+        for (Fault fault in faults) {
+          originMarker.fault_list?.remove(fault);
+          fault.mid = resultMarker.mid;
+          fault.marker_seq = resultMarker.seq;
+          fault.marker_no = resultMarker.no;
+
+          Map? faultResult = await appService.submitFault(
+            isNew: false,
+            fault: fault,
+            mid: resultMarker.mid,
+            lastFaultSeq: lastFaultSeq,
+          );
+
+          if (faultResult != null) {
+            resultMarker.fault_list?.add(fault);
+            resultMarker.fault_cnt = resultMarker.fault_list?.length ?? 0;
+
+            if (faultResult["fault"] != null) {
+              if (fault.cause != faultResult["fault"].cause) {
+                fault.cause = faultResult["fault"].cause;
+                appService.isFaultSelected.value = false;
+                appService.isFaultSelected.value = true;
+              }
+            }
+            if (faultResult["appended"] != null) {
+              applyChanges(faultResult["appended"]);
+            }
+          }
+          countFaults();
+        }
+      } else {
+        Fluttertoast.showToast(msg: "번호 추가에 실패하였습니다.");
+        countFaults();
+      }
+    }
+  }
+
   // 테이블 결함 추가
   Future<void> addFault(List<String> position, String? mid) async {
     Fault newFault = Fault(qty: "1");
