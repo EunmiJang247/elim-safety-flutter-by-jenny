@@ -127,7 +127,7 @@ class CheckImageController extends GetxController {
       pid: original!.pid!,
       state: DataState.EDITED,
     );
-    _localGalleryDataService.fetchGalleryPictures();
+    _localGalleryDataService.loadGalleryFromHive();
 
     original?.kind = newKind;
     curKind.value = newKind;
@@ -161,7 +161,7 @@ class CheckImageController extends GetxController {
     _appService.isLeftBarOpened.value = true;
     _appService.isLeftBarOpened.value = false;
     ProjectGalleryController projectGalleryController = Get.find();
-    projectGalleryController.localGalleryDataService.fetchGalleryPictures();
+    projectGalleryController.localGalleryDataService.loadGalleryFromHive();
   }
 
   deletePicture() async {
@@ -170,7 +170,7 @@ class CheckImageController extends GetxController {
         pid: original!.pid!, state: DataState.DELETED);
 
     // 갤러리 새로고침
-    _localGalleryDataService.fetchGalleryPictures();
+    _localGalleryDataService.loadGalleryFromHive();
 
     // 결함에서 사진 제거
     _appService.selectedFault.value.picture_list?.removeWhere(

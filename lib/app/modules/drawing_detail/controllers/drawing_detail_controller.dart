@@ -973,7 +973,7 @@ class DrawingDetailController extends GetxController {
       curDrawingMemo.value!.pid = memoPicture.value!.pid;
 
       appService.isLeftBarOpened.refresh();
-      _localGalleryDataService.fetchGalleryPictures();
+      _localGalleryDataService.loadGalleryFromHive();
     }
   }
 

@@ -315,7 +315,7 @@ class ProjectInfoController extends GetxController {
       appService.projectList.refresh();
       appService.isLeftBarOpened.refresh();
 
-      _localGalleryDataService.fetchGalleryPictures();
+      _localGalleryDataService.loadGalleryFromHive();
     }
   }
 }

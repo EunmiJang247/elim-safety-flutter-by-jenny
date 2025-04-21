@@ -29,6 +29,7 @@ class LocalGalleryDataService extends GetxService {
     // await deleted_gallery_box.deleteFromDisk();
 
     super.onInit();
+    fetchGalleryPictures();
   }
 
   List<CustomPicture> get PictureList =>
@@ -199,7 +200,7 @@ class LocalGalleryDataService extends GetxService {
 
     updatedPicture.kind = kind;
     await gallery_box.put(updatedPicture.pid, updatedPicture);
-    fetchGalleryPictures();
+    loadGalleryFromHive();
   }
 
   // 사진 위치 변경
@@ -240,10 +241,9 @@ class LocalGalleryDataService extends GetxService {
       GalleryPictures.refresh();
       return;
     }
-
-    searchResult.map(
+    await Future.wait(searchResult.map(
       (e) => gallery_box.put(e.pid, e),
-    );
+    ));
 
     // 전경사진 찾기
     CustomPicture? projectPicture = searchResult
@@ -304,6 +304,39 @@ class LocalGalleryDataService extends GetxService {
     curPictures.sort(
       (a, b) => int.parse(a.no ?? "0").compareTo(int.parse(b.no ?? "0")),
     );
+    GalleryPictures.value = [
+      bgPictures,
+      curPictures,
+      etcPictures,
+      faultPictures
+    ];
+    GalleryPictures.refresh();
+  }
+
+  void loadGalleryFromHive() {
+    AppService appService = Get.find<AppService>();
+    String projectSeq = appService.curProject?.value.seq ?? "";
+    final localPictures = PictureList.where(
+      (pic) =>
+          pic.project_seq == projectSeq && pic.state != DataState.DELETED.index,
+    ).toList();
+
+    faultPictures.value = localPictures.where((p) => p.kind == "결함").toList()
+      ..sort(
+          (a, b) => int.parse(a.no ?? "0").compareTo(int.parse(b.no ?? "0")));
+
+    bgPictures.value = localPictures.where((p) => p.kind == "전경").toList()
+      ..sort(
+          (a, b) => int.parse(a.no ?? "0").compareTo(int.parse(b.no ?? "0")));
+
+    etcPictures.value = localPictures.where((p) => p.kind == "기타").toList()
+      ..sort(
+          (a, b) => int.parse(a.no ?? "0").compareTo(int.parse(b.no ?? "0")));
+
+    curPictures.value = localPictures.where((p) => p.kind == "현황").toList()
+      ..sort(
+          (a, b) => int.parse(a.no ?? "0").compareTo(int.parse(b.no ?? "0")));
+
     GalleryPictures.value = [
       bgPictures,
       curPictures,
