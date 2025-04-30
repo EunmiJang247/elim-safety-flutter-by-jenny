@@ -4,263 +4,65 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:safety_check/app/constant/constants.dart';
 import 'package:safety_check/app/constant/data_state.dart';
-import 'package:safety_check/app/data/models/03_marker.dart';
-import 'package:safety_check/app/data/models/04_fault.dart';
+import 'package:safety_check/app/data/models/01_project.dart';
 import 'package:safety_check/app/data/models/05_picture.dart';
+import 'package:safety_check/app/data/models/site_check_form.dart';
 import 'package:safety_check/app/data/services/app_service.dart';
 import 'package:safety_check/app/data/services/local_gallery_data_service.dart';
-import 'package:safety_check/app/modules/check_image/controllers/check_image_controller.dart';
-import 'package:safety_check/app/modules/project_gallery/controllers/project_gallery_controller.dart';
+import 'package:safety_check/app/utils/log.dart';
 import '../../../routes/app_pages.dart';
 
 class ProjectChecksController extends GetxController {
+  final curProject = Rx<Project?>(null);
   final AppService appService;
   final LocalGalleryDataService _localGalleryDataService;
-  TextEditingController searchController = TextEditingController();
+  final ImagePicker imagePicker = ImagePicker();
 
-  final requirementTextController = TextEditingController();
-  RxBool isRequirementChanged = false.obs;
-  late FocusNode requirementFocus = FocusNode();
-  RxBool requirementFocused = false.obs;
-  RxInt isMyPlace = 0.obs;
+  TextEditingController inspectorNameController = TextEditingController();
+  TextEditingController remarkController = TextEditingController();
 
-  ProjectChecksController(
-      {required this.appService,
-      required LocalGalleryDataService localGalleryDataService})
-      : _localGalleryDataService = localGalleryDataService;
+  late FocusNode inspectorNameFocus = FocusNode();
 
-  RxBool isFaultListAll = false.obs;
-
-  RxList<Marker> markerList = <Marker>[].obs;
-  List drawingList = [];
-  List<Fault> faultList = [];
-
-  RxMap<String, List<Fault>> tableMarkerData = <String, List<Fault>>{}.obs;
-  // RxMap 타입 수정 (동이름>층>마커별 결함 목록)
-  RxMap<String, Map<int, Map<String, List<Fault>>>> tableData =
-      <String, Map<int, Map<String, List<Fault>>>>{}.obs;
-  int curRowIndex = -1;
-
-  ScrollController scrollController = ScrollController();
-
-  // 포커스 해제 메서드
-  void unfocus() {
-    if (requirementFocus.hasFocus) {
-      requirementFocus.unfocus();
-    }
-  }
+  ProjectChecksController({
+    required this.appService,
+    required LocalGalleryDataService localGalleryDataService,
+  }) : _localGalleryDataService = localGalleryDataService;
 
   @override
-  Future<void> onInit() async {
-    appService.isProjectInfoPage = true;
-
-    // FocusNode 초기화
-    requirementFocus = FocusNode();
-
-    // 3D 버튼 보임 여부
-    appService.liveTourUrl = appService.curProject?.value.live_tour_url ?? "";
-
-    requirementFocus.addListener(() {
-      requirementFocused.value = requirementFocus.hasFocus;
-      if (requirementFocused.value) {
-        // 키보드가 올라오면 약간의 딜레이 후 스크롤 조정
-        Future.delayed(Duration(milliseconds: 300), () {
-          if (scrollController.hasClients) {
-            final viewInsets = MediaQuery.of(Get.context!).viewInsets.bottom;
-            // 현재 스크롤 위치에서 키보드 높이만큼 추가로 스크롤
-            scrollController.animateTo(
-              scrollController.offset + viewInsets + 40,
-              duration: Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        });
-      } else {
-        if (isRequirementChanged.value) {
-          appService.curProject!.value.requirement =
-              requirementTextController.text;
-
-          // API 호출
-          appService.submitProject(appService.curProject!.value);
-
-          isRequirementChanged.value = false;
-        }
-      }
-    });
-
-    requirementTextController.text =
-        appService.curProject!.value.requirement ?? "";
-
-    // 텍스트 변경 리스너
-    requirementTextController.addListener(() {
-      if (requirementTextController.text !=
-          appService.curProject!.value.requirement) {
-        isRequirementChanged.value = true;
-      }
-    });
-
-    // requirementFocus.addListener(() {
-    //   if (!requirementFocus.hasFocus) {
-    //     unfocus();
-    //   } else {
-    //     final viewInsets = MediaQuery.of(Get.context!).viewInsets.bottom;
-    //     scrollController.animateTo(
-    //       scrollController.offset + viewInsets * 0.7,
-    //       duration: Duration(milliseconds: 300),
-    //       curve: Curves.easeOut,
-    //     );
-    //   }
-    // });
-
-    Get.put(ProjectGalleryController(
-        appService: Get.find(), localGalleryDataService: Get.find()));
-
-    await EasyLoading.dismiss();
-
-    await fetchData();
-    countFaults();
-
+  void onInit() {
+    curProject.value = appService.curProject?.value;
     super.onInit();
-  }
 
-  @override
-  void dispose() {
-    scrollController.dispose();
-    requirementTextController.dispose();
-    requirementFocus.dispose();
-    super.dispose();
-  }
-
-  Future fetchData() async {
-    await EasyLoading.show();
-
-    // 마커 목록
-    markerList.value = await appService.getMarkerList(
-            projectSeq: appService.curProject!.value.seq) ??
-        [];
-    if (markerList.isNotEmpty) {
-      markerList.sort(
-        (a, b) => int.parse(a.no!).compareTo(int.parse(b.no!)),
+    if (curProject.value?.site_check_form == null) {
+      appService.curProject?.value.site_check_form = SiteCheckForm(
+        inspectorName: "",
+        inspectionDate: "",
+        data: [],
       );
     }
 
-    // 결함 목록
-    faultList = [];
-    for (Marker marker in markerList) {
-      faultList.addAll(marker.fault_list ?? []);
-
-      // Load pictures from local gallery for each fault
-      for (Fault fault in faultList) {
-        List<CustomPicture>? pictures = loadGallery(fault.fid ?? "");
-        fault.picture_list = pictures;
+    inspectorNameFocus.addListener(() {
+      if (!inspectorNameFocus.hasFocus) {
+        _onFieldUnfocused('inspectorName', inspectorNameController.text);
       }
-    }
-    if (faultList.isNotEmpty) {
-      appService.selectedFault.value = faultList[0];
-    }
-
-    countFaults();
-
-    await EasyLoading.dismiss();
+    });
   }
 
-  // 번호별 결함 수 확인
-  // 번호별 결함 수 확인 메서드 수정
-  void countFaults() {
-    String markerNo = "";
-    tableMarkerData.value = {};
-    appService.displayingFid = {};
-    tableData.clear();
-
-    // 동이름과 층별로 마커 그룹화
-    Map<String, Map<int, List<Marker>>> markersByDongAndFloor = {};
-
-    for (Marker marker in markerList) {
-      String dong = marker.dong ?? "기타";
-      int floor = int.parse(marker.floor ?? "0");
-
-      // 동 데이터 초기화
-      if (!markersByDongAndFloor.containsKey(dong)) {
-        markersByDongAndFloor[dong] = {};
+  void _onFieldUnfocused(String fieldName, String value) async {
+    try {
+      switch (fieldName) {
+        case 'inspectorName':
+          appService.curProject?.value.site_check_form?.inspectorName = value;
+          break;
       }
 
-      // 층 데이터 초기화
-      if (!markersByDongAndFloor[dong]!.containsKey(floor)) {
-        markersByDongAndFloor[dong]![floor] = [];
-      }
-
-      // 해당 동과 층에 마커 추가
-      markersByDongAndFloor[dong]![floor]!.add(marker);
+      appService.submitProject(appService.curProject!.value);
+    } catch (e) {
+      EasyLoading.showError('$fieldName 저장 실패');
     }
-
-    // 동이름 키를 오름차순으로 정렬
-    List<String> sortedDongNames = markersByDongAndFloor.keys.toList()..sort();
-
-    // 정렬된 동이름 순서대로 처리
-    for (var dong in sortedDongNames) {
-      var floorMap = markersByDongAndFloor[dong];
-
-      tableData[dong] = {};
-
-      // 층 이름 내림차순으로 정렬
-      List<int> sortedFloorNames = floorMap!.keys.toList()
-        ..sort((a, b) => b.compareTo(a));
-
-      // 정렬된 층 순서대로 처리
-      for (var floor in sortedFloorNames) {
-        List<Marker> markers = floorMap[floor]!;
-
-        // 층별 데이터 초기화
-        tableData[dong]![floor] = {};
-
-        // 마커별 결함 데이터 처리
-        for (Marker marker in markers) {
-          markerNo = marker.no ?? "";
-          List<Fault> markerFaults = marker.fault_list ?? [];
-
-          // 마커에 결함 데이터 추가
-
-          // 결함 처리 (기존 로직 유지)
-          for (Fault fault in markerFaults) {
-            // 결함 전체 목록에 추가
-            if (!faultList.contains(fault)) {
-              faultList.add(fault);
-            }
-
-            // 그룹 파울트 ID 처리
-            if (appService.displayingFid[fault.group_fid] == null) {
-              appService.displayingFid[fault.group_fid!] = fault.fid!;
-            }
-
-            if (!tableData[dong]![floor]!.containsKey(markerNo)) {
-              tableData[dong]![floor]![markerNo] = [];
-            }
-            tableData[dong]![floor]![markerNo]!.add(fault);
-          }
-        }
-      }
-    }
-
-    // _appService.selectedFault.value = fault;
-    appService.isFaultSelected.value = false;
-  }
-
-  showImage() {
-    List<CustomPicture> pictureList = _localGalleryDataService
-        .getPictureInProject(projectSeq: appService.curProject!.value.seq!);
-    CustomPicture? pic =
-        pictureList.where((pic) => pic.kind == "전경").toList().firstOrNull;
-    if (pic != null) Get.toNamed(Routes.CHECK_IMGAGE, arguments: pic);
-  }
-
-  // 홈으로
-  goHome() {
-    requirementFocus.unfocus();
-    appService.isProjectSelected = false;
-    appService.liveTourUrl = "";
-    Get.offAllNamed(Routes.PROJECT_LIST);
   }
 
   // 도면목록
@@ -268,54 +70,210 @@ class ProjectChecksController extends GetxController {
     Get.toNamed(Routes.DRAWING_LIST);
   }
 
-  // 현장점검표
-  goCheckList() {
-    Get.toNamed(Routes.PROJECT_CHECK_LIST);
+  takePictureAndSet(String cate, String child, String pic) async {
+    try {
+      CustomPicture? newImage = await _takePicture();
+      if (newImage == null) {
+        EasyLoading.showToast("사진 촬영 실패");
+        return;
+      }
+
+      final form = appService.curProject?.value.site_check_form;
+      if (form == null) {
+        EasyLoading.showToast("양식을 찾을 수 없습니다");
+        return;
+      }
+
+      bool isUpdated = await _updatePictureInForm(
+        form: form,
+        category: cate,
+        childKind: child,
+        pictureTitle: pic,
+        newPicture: newImage,
+      );
+
+      if (isUpdated) {
+        EasyLoading.showSuccess("사진이 저장되었습니다");
+        _localGalleryDataService.loadGalleryFromHive();
+      } else {
+        EasyLoading.showError("해당 위치를 찾을 수 없습니다");
+      }
+    } catch (e) {
+      logError("사진 저장 중 오류가 발생했습니다: $e");
+      EasyLoading.showError("사진 저장 중 오류가 발생했습니다: $e");
+    }
   }
 
-  List<CustomPicture>? loadGallery(String fid) {
-    return _localGalleryDataService.loadGallery(fid);
+  Future<bool> _updatePictureInForm({
+    required SiteCheckForm form,
+    required String category,
+    required String childKind,
+    required String pictureTitle,
+    required CustomPicture newPicture,
+  }) async {
+    InspectionData? targetData = form.data.firstWhereOrNull(
+      (data) => data.caption == category,
+    );
+
+    if (targetData == null) {
+      targetData = InspectionData(
+        caption: category,
+        children: [],
+      );
+      form.data.add(targetData);
+    }
+
+    Children? targetChild = targetData.children.firstWhereOrNull(
+      (child) => child.kind == childKind,
+    );
+
+    if (targetChild == null) {
+      targetChild = Children(
+        kind: childKind,
+        pictures: [],
+        remark: '',
+      );
+      targetData.children.add(targetChild);
+    }
+
+    int sameTitleCount = targetChild.pictures
+        .where((pic) => pic.title.startsWith(pictureTitle))
+        .length;
+
+    String finalTitle = pictureTitle;
+    if (sameTitleCount > 0) {
+      finalTitle = '$pictureTitle${sameTitleCount + 1}';
+    }
+
+    Picture newPic = Picture(
+      title: finalTitle,
+      pid: newPicture.pid,
+      remark: '',
+    );
+
+    targetChild.pictures.add(newPic);
+    appService.submitProject(appService.curProject!.value);
+    curProject.refresh();
+
+    return true;
   }
 
-  // 테이블 결함 선택
-  void onTapRow(Fault fault) {
-    // _appService.selectedFault.value = fault;
-    // _appService.isFaultSelected.value = true;
-  }
-
-  // 전경사진 촬영
-  takeProjectPicture() async {
-    final ImagePicker imagePicker = ImagePicker();
+  Future<CustomPicture?> _takePicture() async {
     XFile? xFile = await imagePicker.pickImage(
       source: ImageSource.camera,
       imageQuality: imageQuality,
       maxWidth: imageMaxWidth,
     );
     if (xFile != null) {
-      // File file = await appService.compressImage(xImage);
       String savedFilePath =
           await appService.savePhotoToExternal(File(xFile.path));
 
-      CustomPicture projectPicture = appService.makeNewPicture(
+      CustomPicture newPicture = appService.makeNewPicture(
         pid: appService.createId(),
         projectSeq: appService.curProject!.value.seq!,
         filePath: savedFilePath,
-        thumb: xFile.path,
-        kind: "전경",
-        dong: "",
-        floorName: "",
+        thumb: savedFilePath,
+        kind: "현황",
         dataState: DataState.NEW,
       );
-      appService.curProject!.value.picture = savedFilePath;
-      appService.curProject!.value.picture_pid = projectPicture.pid;
-      appService.curProject!.value.picture_cnt =
-          (int.parse(appService.curProject!.value.picture_cnt!) + 1).toString();
-
-      appService.curProject!.refresh();
-      appService.projectList.refresh();
-      appService.isLeftBarOpened.refresh();
-
-      _localGalleryDataService.loadGalleryFromHive();
+      return newPicture;
     }
+    return null;
+  }
+
+  Future<void> onRemarkSubmit(
+      CustomPicture targetPicture, String newRemark) async {
+    if (targetPicture.pid == null) {
+      EasyLoading.showError('사진 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      final form = appService.curProject?.value.site_check_form;
+
+      if (form == null) {
+        EasyLoading.showError('폼이 없습니다.');
+        return;
+      }
+
+      bool updated = false;
+
+      for (var data in form.data) {
+        for (var child in data.children) {
+          for (var picture in child.pictures) {
+            if (picture.pid == targetPicture.pid) {
+              picture.remark = newRemark; // remark 업데이트!
+              updated = true;
+              break;
+            }
+          }
+          if (updated) break;
+        }
+        if (updated) break;
+      }
+
+      if (updated) {
+        EasyLoading.showSuccess('메모 저장 완료');
+        appService.submitProject(appService.curProject!.value);
+        curProject.refresh();
+      } else {
+        EasyLoading.showError('해당 사진을 찾을 수 없습니다.');
+      }
+    } catch (e) {
+      EasyLoading.showError('메모 저장 실패: $e');
+      rethrow;
+    }
+  }
+
+  onDeletePicture(targetPicture) async {
+    try {
+      await _localGalleryDataService.changePictureState(
+          pid: targetPicture.pid, state: DataState.DELETED);
+    } catch (e) {
+      logError('사진 삭제 실패');
+    }
+
+    final form = appService.curProject?.value.site_check_form;
+    if (form == null) {
+      EasyLoading.showError('폼이 없습니다.');
+      return;
+    }
+
+    List<InspectionData> dataToRemove = [];
+    for (var data in form.data) {
+      List<Children> childrenToRemove = [];
+      for (var child in data.children) {
+        child.pictures
+            .removeWhere((picture) => picture.pid == targetPicture.pid);
+
+        if (child.pictures.isEmpty) {
+          childrenToRemove.add(child);
+        }
+      }
+
+      for (var child in childrenToRemove) {
+        data.children.remove(child);
+      }
+
+      if (data.children.isEmpty) {
+        dataToRemove.add(data);
+      }
+    }
+
+    for (var data in dataToRemove) {
+      form.data.remove(data);
+    }
+
+    appService.submitProject(appService.curProject!.value);
+    _localGalleryDataService.loadGalleryFromHive();
+    curProject.refresh();
+
+    Get.back();
+  }
+
+  void onDateChange(DateTime date) {
+    final formatted = DateFormat('yyyy-MM-dd').format(date);
+    appService.curProject?.value.site_check_form?.inspectionDate = formatted;
+    appService.submitProject(appService.curProject!.value);
   }
 }

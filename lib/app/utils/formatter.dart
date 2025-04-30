@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:safety_check/app/data/models/04_fault.dart';
 import 'package:safety_check/app/data/services/app_service.dart';

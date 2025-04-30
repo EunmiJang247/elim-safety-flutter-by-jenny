@@ -14,6 +14,7 @@ import '../models/03_marker.dart';
 import '../models/base_response.dart';
 import '../models/02_drawing.dart';
 import '../models/01_project.dart';
+import 'dart:convert';
 
 class AppRepository {
   AppRepository({required AppAPI appAPI}) : _appAPI = appAPI;
@@ -135,6 +136,7 @@ class AppRepository {
       Map<String, dynamic> body = {
         "seq": project.seq,
         "requirement": project.requirement,
+        "siteCheckForm": jsonEncode(project.site_check_form?.toJson()),
       };
       BaseResponse? response = await _appAPI.client.submitProject(body);
       project = Project.fromJson(response?.data);

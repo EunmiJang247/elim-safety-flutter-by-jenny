@@ -16,6 +16,8 @@ import 'app/data/repository/app_repository.dart';
 import 'app/data/services/app_service.dart';
 import 'app/data/services/local_app_data_service.dart';
 import 'app/routes/app_pages.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
@@ -24,6 +26,7 @@ Future<void> main() async {
 
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await initializeDateFormatting('ko');
 
   Get.put<LocalAppDataService>(
     LocalAppDataService(),
@@ -61,6 +64,16 @@ Future<void> main() async {
         builder: (BuildContext context, Widget? child) {
           return GetMaterialApp(
             title: "Application",
+            locale: const Locale('ko'),
+            supportedLocales: const [
+              Locale('ko'),
+              Locale('en'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             initialRoute: AppPages.INITIAL,
             getPages: AppPages.routes,
             defaultTransition: Transition.rightToLeftWithFade,
