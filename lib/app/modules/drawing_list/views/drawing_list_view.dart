@@ -421,9 +421,8 @@ class DrawingListView extends GetView<DrawingListController> {
                                                             BoxShadow(
                                                                 color: Colors
                                                                     .black
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.1),
+                                                                    .withOpacity(
+                                                                        0.1),
                                                                 offset: Offset(
                                                                     0, 4),
                                                                 blurRadius: 6,
@@ -432,9 +431,8 @@ class DrawingListView extends GetView<DrawingListController> {
                                                             BoxShadow(
                                                                 color: Colors
                                                                     .black
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.1),
+                                                                    .withOpacity(
+                                                                        0.1),
                                                                 offset: Offset(
                                                                     0, 10),
                                                                 blurRadius: 15,

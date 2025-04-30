@@ -181,7 +181,6 @@ class CheckImageView extends GetView<CheckImageController> {
                                 ),
                                 Gaps.w12,
                                 CupertinoSwitch(
-                                  activeTrackColor: AppColors.c4,
                                   value: controller.isCompareMode.value,
                                   onChanged: (value) =>
                                       controller.onClickCompareSwitch(value),

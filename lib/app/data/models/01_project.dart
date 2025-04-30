@@ -1,7 +1,10 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:convert';
+
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:safety_check/app/data/models/site_check_form.dart';
 
 part '01_project.g.dart';
 
@@ -128,6 +131,12 @@ class Project {
   String? attachment2;
   @HiveField(59)
   String? picture_pid;
+  @JsonKey(
+    fromJson: _parseSiteCheckForm,
+    toJson: _siteCheckFormToJson,
+  )
+  @HiveField(60)
+  SiteCheckForm? site_check_form;
 
   Project({
     this.seq,
@@ -190,6 +199,7 @@ class Project {
     this.attachment1,
     this.attachment2,
     this.picture_pid,
+    this.site_check_form,
   });
 
   copyWithAppSubmitTime(String? app_submit_time) => Project(
@@ -242,9 +252,33 @@ class Project {
         attachment1: attachment1,
         attachment2: attachment2,
         picture_pid: picture_pid,
+        site_check_form: site_check_form,
       );
 
   factory Project.fromJson(Map<String, dynamic> json) =>
       _$ProjectFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectToJson(this);
+}
+
+SiteCheckForm? _parseSiteCheckForm(dynamic raw) {
+  if (raw == null) return null;
+
+  if (raw is String) {
+    try {
+      return SiteCheckForm.fromJson(jsonDecode(raw));
+    } catch (e) {
+      print('❌ site_check_form jsonDecode 실패: $e');
+      return null;
+    }
+  }
+
+  if (raw is Map<String, dynamic>) {
+    return SiteCheckForm.fromJson(raw);
+  }
+
+  return null;
+}
+
+dynamic _siteCheckFormToJson(SiteCheckForm? form) {
+  return form?.toJson();
 }

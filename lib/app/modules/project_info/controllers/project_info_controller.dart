@@ -11,7 +11,6 @@ import 'package:safety_check/app/data/models/04_fault.dart';
 import 'package:safety_check/app/data/models/05_picture.dart';
 import 'package:safety_check/app/data/services/app_service.dart';
 import 'package:safety_check/app/data/services/local_gallery_data_service.dart';
-import 'package:safety_check/app/modules/check_image/controllers/check_image_controller.dart';
 import 'package:safety_check/app/modules/project_gallery/controllers/project_gallery_controller.dart';
 import '../../../routes/app_pages.dart';
 
@@ -315,7 +314,7 @@ class ProjectInfoController extends GetxController {
       appService.projectList.refresh();
       appService.isLeftBarOpened.refresh();
 
-      _localGalleryDataService.fetchGalleryPictures();
+      _localGalleryDataService.loadGalleryFromHive();
     }
   }
 }

@@ -180,6 +180,7 @@ class _NumberDrawerState extends State<NumberDrawer> {
         _buildOutlineColorButton(),
         _buildForegroundColorButton(),
         _buildDeleteButton(),
+        _buildDetachButton(),
         _buildCloseButton(),
       ],
     );
@@ -267,10 +268,27 @@ class _NumberDrawerState extends State<NumberDrawer> {
     );
   }
 
+  // 분리 버튼
+  Widget _buildDetachButton() {
+    return InkWell(
+      onTap: () => _showDetachDialog(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 10.0),
+        child: Icon(
+          FontAwesomeIcons.linkSlash,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
   // 닫기 버튼
   Widget _buildCloseButton() {
     return InkWell(
-      onTap: () => drawingDetailController.closeNumberDrawer(context),
+      onTap: () {
+        drawingDetailController.closeNumberDrawer(context);
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
         child: Icon(
@@ -278,6 +296,42 @@ class _NumberDrawerState extends State<NumberDrawer> {
           color: Colors.white,
           size: 24,
         ),
+      ),
+    );
+  }
+
+  // 분리 확인 다이얼로그
+  void _showDetachDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => TwoButtonDialog(
+        height: 200,
+        content: Column(
+          children: [
+            Text(
+              "마커 분리",
+              style: TextStyle(
+                fontFamily: "Pretendard",
+                color: AppColors.c1,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
+            Gaps.h16,
+            Text(
+              "'${drawingDetailController.selectedMarker.value.no}'번을 분리하시겠습니까? \n",
+              style: TextStyle(fontFamily: "Pretendard", fontSize: 18),
+              textAlign: TextAlign.center,
+            )
+          ],
+        ),
+        yes: "분리",
+        no: "취소",
+        onYes: () {
+          drawingDetailController.detachMarker();
+          Get.back();
+        },
+        onNo: () => Get.back(),
       ),
     );
   }
@@ -318,16 +372,39 @@ class _NumberDrawerState extends State<NumberDrawer> {
     );
   }
 
+  void _sortFaultsByCloneGroup(List<Fault> faults) {
+    faults.sort((a, b) {
+      // 1. group_fid를 기준으로 먼저 묶고
+      final groupCompare = (a.group_fid ?? '').compareTo(b.group_fid ?? '');
+      if (groupCompare != 0) return groupCompare;
+
+      // 2. 같은 그룹이라면 등록시간 순으로 정렬
+      return (a.reg_time ?? '').compareTo(b.reg_time ?? '');
+    });
+  }
+
+  List<Fault> _filterChildFaults(List<Fault> faults, String fid) {
+    return faults.where((fault) => fault.group_fid == fid).toList();
+  }
+
   // 결함 목록 위젯
   Widget _buildFaultList() {
+    List<Fault> sortedFaults = [...faultList];
+    _sortFaultsByCloneGroup(sortedFaults);
+
+    if (drawingDetailController.appService.selectedFault.value.fid != null &&
+        drawingDetailController.isPointSelected.value) {
+      String fid = drawingDetailController.appService.selectedFault.value.fid!;
+      sortedFaults = _filterChildFaults(sortedFaults, fid);
+    }
     return Expanded(
       child: Container(
         padding: EdgeInsets.only(left: 16, top: 16, right: 16),
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: faultList.length,
+          itemCount: sortedFaults.length,
           itemBuilder: (context, index) => FaultItemCard(
-            fault: faultList[index],
+            fault: sortedFaults[index],
             drawingDetailController: drawingDetailController,
             appService: appService,
           ),
@@ -369,47 +446,50 @@ class FaultItemCard extends StatelessWidget {
       onTap: () {
         appService.selectedFault.value = fault;
         appService.isFaultSelected.value = true;
-        drawingDetailController.closeNumberDrawer(context);
       },
-      child: Container(
-        height: _cardHeight,
-        margin: const EdgeInsets.only(bottom: _cardMarginBottom),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 1),
-              blurRadius: 2,
-              spreadRadius: -1,
+      child: Padding(
+        padding: (fault.group_fid != fault.fid)
+            ? const EdgeInsets.fromLTRB(12, 0, 0, 0)
+            : EdgeInsets.zero,
+        child: Container(
+            height: _cardHeight,
+            margin: const EdgeInsets.only(bottom: _cardMarginBottom),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 1),
+                  blurRadius: 2,
+                  spreadRadius: -1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 1),
+                  blurRadius: 3,
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 4),
+                  blurRadius: 6,
+                  spreadRadius: -4,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: Offset(0, 10),
+                  blurRadius: 15,
+                  spreadRadius: -3,
+                ),
+              ],
             ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 1),
-              blurRadius: 3,
-              spreadRadius: 0,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 4),
-              blurRadius: 6,
-              spreadRadius: -4,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              offset: Offset(0, 10),
-              blurRadius: 15,
-              spreadRadius: -3,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _buildThumbnail(thumb),
-            Expanded(child: _buildFaultDetails()),
-          ],
-        ),
+            child: Row(
+              children: [
+                _buildThumbnail(thumb),
+                Expanded(child: _buildFaultDetails()),
+              ],
+            )),
       ),
     );
   }

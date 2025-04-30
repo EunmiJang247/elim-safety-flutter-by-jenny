@@ -79,13 +79,14 @@ class ProjectAdapter extends TypeAdapter<Project> {
       attachment1: fields[57] as String?,
       attachment2: fields[58] as String?,
       picture_pid: fields[59] as String?,
+      site_check_form: fields[60] as SiteCheckForm?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Project obj) {
     writer
-      ..writeByte(60)
+      ..writeByte(61)
       ..writeByte(0)
       ..write(obj.seq)
       ..writeByte(1)
@@ -205,7 +206,9 @@ class ProjectAdapter extends TypeAdapter<Project> {
       ..writeByte(58)
       ..write(obj.attachment2)
       ..writeByte(59)
-      ..write(obj.picture_pid);
+      ..write(obj.picture_pid)
+      ..writeByte(60)
+      ..write(obj.site_check_form);
   }
 
   @override
@@ -286,6 +289,7 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => Project(
       attachment1: json['attachment1'] as String?,
       attachment2: json['attachment2'] as String?,
       picture_pid: json['picture_pid'] as String?,
+      site_check_form: _parseSiteCheckForm(json['site_check_form']),
     );
 
 Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
@@ -349,4 +353,5 @@ Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
       'attachment1': instance.attachment1,
       'attachment2': instance.attachment2,
       'picture_pid': instance.picture_pid,
+      'site_check_form': _siteCheckFormToJson(instance.site_check_form),
     };

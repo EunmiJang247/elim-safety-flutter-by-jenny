@@ -48,7 +48,7 @@ class ProjectGalleryController extends GetxController {
         .toList();
     Future.microtask(
       () async {
-        localGalleryDataService.fetchGalleryPictures();
+        localGalleryDataService.loadGalleryFromHive();
       },
     );
     super.onInit();
@@ -90,6 +90,6 @@ class ProjectGalleryController extends GetxController {
   deletePicture(String pid) {
     localGalleryDataService.changePictureState(
         pid: pid, state: DataState.DELETED);
-    localGalleryDataService.fetchGalleryPictures();
+    localGalleryDataService.loadGalleryFromHive();
   }
 }

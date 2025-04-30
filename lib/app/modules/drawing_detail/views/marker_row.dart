@@ -134,7 +134,7 @@ class _MarkerRowState extends State<MarkerRow> {
                             ? AppColors.c4
                             : (appService.faultTableCurRowIndex) % 2 == 0
                                 ? Colors.white
-                                : Colors.black.withValues(alpha: 0.05),
+                                : Colors.black.withOpacity(0.05),
                       ),
                       child: Row(
                         children: [

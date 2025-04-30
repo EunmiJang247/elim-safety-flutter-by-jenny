@@ -13,7 +13,6 @@ import 'package:safety_check/app/widgets/drag_indicator_widget.dart';
 import 'package:safety_check/app/widgets/left_menu_bar.dart';
 import 'package:safety_check/app/widgets/two_button_dialog.dart';
 
-import '../../../constant/app_color.dart';
 import '../../../constant/constants.dart';
 import '../../../constant/gaps.dart';
 import '../controllers/drawing_detail_controller.dart';
@@ -228,7 +227,7 @@ class DrawingDetailView extends GetView<DrawingDetailController> {
                           Transform.scale(
                             scale: 1.2,
                             child: CupertinoSwitch(
-                              activeTrackColor: AppColors.c4,
+                              // activeTrackColor: AppColors.c4,
                               value: !controller.isDrawingSelected.value,
                               onChanged: (value) =>
                                   controller.isDrawingSelected.value = !value,

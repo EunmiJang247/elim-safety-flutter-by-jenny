@@ -22,7 +22,7 @@ class RulerWidget extends StatelessWidget {
     return Center(
       child: Container(
         padding: const EdgeInsets.only(bottom: 10),
-        color: Colors.black.withValues(alpha: 0.1),
+        color: Colors.black.withOpacity(0.1),
         width: double.infinity,
         height: 70,
         child: Stack(

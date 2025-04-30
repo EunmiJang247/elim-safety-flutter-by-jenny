@@ -24,12 +24,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
             color: Color(0xFFF5F5F5),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 4),
                   blurRadius: 6,
                   spreadRadius: -4),
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 10),
                   blurRadius: 15,
                   spreadRadius: -3),

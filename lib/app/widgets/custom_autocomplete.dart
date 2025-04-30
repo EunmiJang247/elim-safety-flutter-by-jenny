@@ -79,12 +79,12 @@ class CustomAutoCompleteField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       offset: Offset(0, 1),
                       blurRadius: 2,
                       spreadRadius: -1),
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       offset: Offset(0, 1),
                       blurRadius: 3,
                       spreadRadius: 0),

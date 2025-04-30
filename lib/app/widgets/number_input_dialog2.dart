@@ -282,7 +282,7 @@ class _NumberInputDialog2State extends State<NumberInputDialog2> {
                         width: 50,
                         height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.8),
+                          color: Colors.red.withOpacity(0.8),
                           // border: Border.all(color: Colors.grey),
                           borderRadius: BorderRadius.circular(5),
                         ),

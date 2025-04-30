@@ -70,7 +70,7 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                       if (!drawingDetailController
                           .isMarkerColorChanging.value) {
                         appService.selectedFault.value.color =
-                            intToHex(colors[index].toARGB32());
+                            intToHex(colors[index].value);
                       } else if (drawingDetailController
                           .isBorderColorChanging.value) {
                         for (Marker marker
@@ -78,7 +78,7 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                           if (marker.no ==
                               drawingDetailController.selectedMarker.value.no) {
                             marker.outline_color =
-                                intToHex(colors[index].toARGB32());
+                                intToHex(colors[index].value);
                             drawingDetailController.editMarker(marker);
                           }
                         }
@@ -88,7 +88,7 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                           if (marker.no ==
                               drawingDetailController.selectedMarker.value.no) {
                             marker.foreground_color =
-                                intToHex(colors[index].toARGB32());
+                                intToHex(colors[index].value);
                             drawingDetailController.editMarker(marker);
                           }
                         }

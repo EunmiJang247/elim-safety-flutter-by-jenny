@@ -129,7 +129,7 @@ class ProjectInfoView extends GetView<ProjectInfoController> {
                         scale: 1.2,
                         child: Obx(
                           () => CupertinoSwitch(
-                            activeTrackColor: AppColors.c4,
+                            // activeTrackColor: AppColors.c4,
                             value: controller.isFaultListAll.value,
                             onChanged: (value) => controller.isFaultListAll
                                 .value = !controller.isFaultListAll.value,

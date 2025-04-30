@@ -31,7 +31,7 @@ class DrawingAdapter extends TypeAdapter<Drawing> {
       marker_size: fields[11] as String?,
       floor_name: fields[12] as String?,
       name: fields[13] as String?,
-      memo_list: fields[14] as List<DrawingMemo>,
+      memo_list: (fields[14] as List).cast<DrawingMemo>(),
     );
   }
 
@@ -104,7 +104,7 @@ Drawing _$DrawingFromJson(Map<String, dynamic> json) => Drawing(
       memo_list: (json['memo_list'] as List<dynamic>?)
               ?.map((e) => DrawingMemo.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          [],
+          const [],
     );
 
 Map<String, dynamic> _$DrawingToJson(Drawing instance) => <String, dynamic>{

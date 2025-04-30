@@ -41,7 +41,7 @@ class OneButtonDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: Colors.black.withOpacity(0.25),
                             offset: Offset(1, 1),
                             blurRadius: 1)
                       ]),

@@ -28,6 +28,8 @@ import '../../../data/models/05_picture.dart';
 import '../../../widgets/custom_color_picker.dart';
 import '../../../widgets/selection_dialog/element_selection_dialog.dart';
 
+// TODO Jenny 뒤로가기 작업 시작
+
 class FaultDrawer extends StatefulWidget {
   const FaultDrawer({super.key});
 
@@ -127,6 +129,20 @@ class _FaultDrawerState extends State<FaultDrawer> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              InkWell(
+                                onTap: () async {
+                                  drawingDetailController
+                                      .closeFaultDrawer(context);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 10.0),
+                                  child: Icon(
+                                    Icons.arrow_back_ios,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                               InkWell(
                                 onTap: () async {
                                   CustomPicture? newImage =
@@ -408,6 +424,8 @@ class _FaultDrawerState extends State<FaultDrawer> {
                                   onTap: () {
                                     drawingDetailController
                                         .closeFaultDrawer(context);
+                                    drawingDetailController
+                                        .closeNumberDrawer(context);
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -485,8 +503,7 @@ class _FaultDrawerState extends State<FaultDrawer> {
                                                               .image,
                                                           size: 50,
                                                           color: Colors.black
-                                                              .withValues(
-                                                                  alpha: 0.2),
+                                                              .withOpacity(0.2),
                                                         ),
                                                       ),
                                                     ),
@@ -561,9 +578,8 @@ class _FaultDrawerState extends State<FaultDrawer> {
                                                       shadows: [
                                                         BoxShadow(
                                                             color: Colors.black
-                                                                .withValues(
-                                                                    alpha:
-                                                                        0.25),
+                                                                .withOpacity(
+                                                                    0.25),
                                                             offset:
                                                                 Offset(0, 4),
                                                             blurRadius: 4)
@@ -598,9 +614,8 @@ class _FaultDrawerState extends State<FaultDrawer> {
                                                       shadows: [
                                                         BoxShadow(
                                                             color: Colors.black
-                                                                .withValues(
-                                                                    alpha:
-                                                                        0.25),
+                                                                .withOpacity(
+                                                                    0.25),
                                                             offset:
                                                                 Offset(0, 4),
                                                             blurRadius: 4)

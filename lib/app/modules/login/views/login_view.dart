@@ -159,7 +159,7 @@ class LoginView extends GetView<LoginController> {
                                   value: controller.isSaveLoginInfo.value,
                                   onChanged: (value) =>
                                       controller.setIsSaveInfo(value),
-                                  activeTrackColor: AppColors.c4,
+                                  // activeTrackColor: AppColors.c4,
                                 ),
                               ),
                             ],

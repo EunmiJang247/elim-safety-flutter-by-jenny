@@ -41,7 +41,7 @@ class ProjectListView extends GetView<ProjectListController> {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.25),
+                                    color: Colors.black.withOpacity(0.25),
                                     offset: Offset(1, 1),
                                     blurRadius: 1,
                                     spreadRadius: 0)
@@ -341,9 +341,8 @@ class ProjectListView extends GetView<ProjectListController> {
                                                                 size: 50,
                                                                 color: Colors
                                                                     .black
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.2),
+                                                                    .withOpacity(
+                                                                        0.2),
                                                               ),
                                                             ),
                                                           )

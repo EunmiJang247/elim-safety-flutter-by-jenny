@@ -28,22 +28,22 @@ class HelpButtonWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 1),
                   blurRadius: 2,
                   spreadRadius: -1),
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 1),
                   blurRadius: 3,
                   spreadRadius: 0),
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 4),
                   blurRadius: 6,
                   spreadRadius: -4),
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   offset: Offset(0, 10),
                   blurRadius: 15,
                   spreadRadius: -3),
