@@ -21,6 +21,7 @@ import '../../../data/models/09_appended.dart';
 import '../../../data/services/app_service.dart';
 import '../../../routes/app_pages.dart';
 import '../views/drawing_help_dialog.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DrawingDetailController extends GetxController {
   final AppService appService;
@@ -841,7 +842,44 @@ class DrawingDetailController extends GetxController {
     countFaults();
   }
 
+  void _showPermissionDialog(String permissionType) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('권한 필요'),
+        content: Text('$permissionType 접근을 위해 설정에서 권한을 허용해주세요.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              openAppSettings();
+            },
+            child: Text('설정으로 이동'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<CustomPicture?> takePicture(Fault? fault) async {
+    // iOS/Android 카메라 권한 체크
+    var cameraStatus = await Permission.camera.status;
+    if (cameraStatus.isDenied) {
+      cameraStatus = await Permission.camera.request();
+    }
+
+    if (!cameraStatus.isGranted) {
+      if (cameraStatus.isPermanentlyDenied) {
+        _showPermissionDialog('카메라');
+      } else {
+        Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
+      }
+      return null;
+    }
+
     XFile? xFile = await imagePicker.pickImage(
       source: ImageSource.camera,
       imageQuality: imageQuality,
@@ -879,6 +917,21 @@ class DrawingDetailController extends GetxController {
   }
 
   Future<List<CustomPicture>?> takeFromGallery(Fault? fault) async {
+    // iOS/Android 카메라 권한 체크
+    var cameraStatus = await Permission.camera.status;
+    if (cameraStatus.isDenied) {
+      cameraStatus = await Permission.camera.request();
+    }
+
+    if (!cameraStatus.isGranted) {
+      if (cameraStatus.isPermanentlyDenied) {
+        _showPermissionDialog('카메라');
+      } else {
+        Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
+      }
+      return null;
+    }
+
     List<XFile> xImages = await imagePicker.pickMultiImage();
     List<CustomPicture>? result = [];
     for (XFile xFile in xImages) {
@@ -950,6 +1003,21 @@ class DrawingDetailController extends GetxController {
 
   // 메모 사진 촬영
   takeMemoPicture() async {
+    // iOS/Android 카메라 권한 체크
+    var cameraStatus = await Permission.camera.status;
+    if (cameraStatus.isDenied) {
+      cameraStatus = await Permission.camera.request();
+    }
+
+    if (!cameraStatus.isGranted) {
+      if (cameraStatus.isPermanentlyDenied) {
+        _showPermissionDialog('카메라');
+      } else {
+        Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
+      }
+      return null;
+    }
+
     XFile? xFile = await imagePicker.pickImage(
       source: ImageSource.camera,
       imageQuality: imageQuality,

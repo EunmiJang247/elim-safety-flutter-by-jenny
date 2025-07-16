@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +15,8 @@ import 'package:safety_check/app/data/services/app_service.dart';
 import 'package:safety_check/app/data/services/local_gallery_data_service.dart';
 import 'package:safety_check/app/utils/log.dart';
 import '../../../routes/app_pages.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class ProjectChecksController extends GetxController {
   final curProject = Rx<Project?>(null);
@@ -159,6 +162,21 @@ class ProjectChecksController extends GetxController {
   }
 
   Future<CustomPicture?> _takePicture() async {
+    // 카메라 권한 체크
+    var cameraStatus = await Permission.camera.status;
+    if (cameraStatus.isDenied) {
+      cameraStatus = await Permission.camera.request();
+    }
+
+    if (!cameraStatus.isGranted) {
+      if (cameraStatus.isPermanentlyDenied) {
+        _showPermissionDialog('카메라');
+      } else {
+        Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
+      }
+      return null;
+    }
+
     XFile? xFile = await imagePicker.pickImage(
       source: ImageSource.camera,
       imageQuality: imageQuality,
@@ -179,6 +197,28 @@ class ProjectChecksController extends GetxController {
       return newPicture;
     }
     return null;
+  }
+
+  void _showPermissionDialog(String permissionType) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('권한 필요'),
+        content: Text('$permissionType 접근을 위해 설정에서 권한을 허용해주세요.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              openAppSettings();
+            },
+            child: Text('설정으로 이동'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> onRemarkSubmit(

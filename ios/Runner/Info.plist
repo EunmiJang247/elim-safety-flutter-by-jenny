@@ -47,5 +47,16 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- 카메라 권한 -->
+		<key>NSCameraUsageDescription</key>
+		<string>안전점검 사진을 촬영하기 위해 카메라 접근이 필요합니다.</string>
+		
+		<!-- 사진 라이브러리 권한 -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>안전점검 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.</string>
+		
+		<!-- iOS 14+ 사진 라이브러리 제한된 접근 권한 -->
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>안전점검 사진을 저장하기 위해 사진 라이브러리 접근이 필요합니다.</string>
 	</dict>
 </plist>
