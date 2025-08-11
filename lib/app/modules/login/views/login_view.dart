@@ -17,6 +17,8 @@ class LoginView extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -196,45 +198,46 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                 )),
-                Expanded(
-                    child: SizedBox(
-                  child: Stack(
-                    children: [
-                      CarouselSlider(
-                          items: controller.bannerImages,
-                          options: CarouselOptions(
-                            height: MediaQuery.of(context).size.height,
-                            padEnds: false,
-                            pageSnapping: true,
-                            autoPlay: true,
-                            viewportFraction: 1,
-                            enlargeCenterPage: false,
-                            onPageChanged: (index, reason) {
-                              controller.index.value = index;
-                            },
-                          )),
-                      Obx(() => Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 24.0),
-                              child: AnimatedSmoothIndicator(
-                                activeIndex: controller.index.value,
-                                count: controller.bannerImages.length,
-                                effect: WormEffect(
-                                  dotWidth: 8.0,
-                                  dotHeight: 8.0,
-                                  activeDotColor: AppColors.c4,
-                                  dotColor: Colors.grey,
+                if (screenWidth >= 768) // 768px 이상일 때만 표시
+                  Expanded(
+                      child: SizedBox(
+                    child: Stack(
+                      children: [
+                        CarouselSlider(
+                            items: controller.bannerImages,
+                            options: CarouselOptions(
+                              height: MediaQuery.of(context).size.height,
+                              padEnds: false,
+                              pageSnapping: true,
+                              autoPlay: true,
+                              viewportFraction: 1,
+                              enlargeCenterPage: false,
+                              onPageChanged: (index, reason) {
+                                controller.index.value = index;
+                              },
+                            )),
+                        Obx(() => Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 24.0),
+                                child: AnimatedSmoothIndicator(
+                                  activeIndex: controller.index.value,
+                                  count: controller.bannerImages.length,
+                                  effect: WormEffect(
+                                    dotWidth: 8.0,
+                                    dotHeight: 8.0,
+                                    activeDotColor: AppColors.c4,
+                                    dotColor: Colors.grey,
+                                  ),
+                                  // onDotClicked: (index) {
+                                  //   _controller.animateToPage(index);
+                                  // },
                                 ),
-                                // onDotClicked: (index) {
-                                //   _controller.animateToPage(index);
-                                // },
                               ),
-                            ),
-                          )),
-                    ],
-                  ),
-                ))
+                            )),
+                      ],
+                    ),
+                  ))
               ],
             ));
           }),
