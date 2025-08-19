@@ -373,6 +373,7 @@ class DrawingListView extends GetView<DrawingListController> {
                                             ],
                                           )
                                         : GridView.builder(
+                                            // 도면카드 뿌려주는 부분!!
                                             padding: EdgeInsets.zero,
                                             gridDelegate:
                                                 SliverGridDelegateWithFixedCrossAxisCount(

@@ -113,6 +113,12 @@ class DrawingListController extends GetxController {
   Future fetchData() async {
     drawingList =
         await _appService.getDrawingList(projectSeq: curProject?.seq) ?? [];
+
+    // 모든 drawingList 데이터 출력
+    // for (int i = 0; i < drawingList.length; i++) {
+    //   print("[$i] ${drawingList[i].toJson()}");
+    // }
+
     searchList.value = List.from(drawingList);
     // 설비목록 가져오기
     if (offlineMode) {
@@ -127,13 +133,67 @@ class DrawingListController extends GetxController {
   void sortDrawingList() {
     searchList.sort(
       (a, b) {
-        int result = a.dong!.compareTo(b.dong!);
-        if (result != 0) {
-          return result;
-        } else {
-          return int.parse(b.floor ?? "-128")
-              .compareTo(int.parse(a.floor ?? "-128"));
+        // 1. 동명으로 먼저 정렬
+        int dongResult = a.dong!.compareTo(b.dong!);
+        if (dongResult != 0) {
+          return dongResult;
         }
+
+        // 2. floor가 1000이 넘는지 체크 (특수도면들)
+        int aFloor = int.parse(a.floor ?? "0");
+        int bFloor = int.parse(b.floor ?? "0");
+        bool aIsSpecial = aFloor > 1000;
+        bool bIsSpecial = bFloor > 1000;
+
+        // 둘 다 특수도면이면 floor 큰 순서부터 (내림차순)
+        if (aIsSpecial && bIsSpecial) {
+          return bFloor.compareTo(aFloor);
+        }
+
+        // 한쪽만 특수도면이면 특수도면을 뒤로
+        if (aIsSpecial && !bIsSpecial) return 1;
+        if (!aIsSpecial && bIsSpecial) return -1;
+
+        // 3. 둘 다 일반층일 때 층으로 정렬
+        // 지상층과 지하층 구분
+        bool aIsAboveGround = aFloor > 0;
+        bool bIsAboveGround = bFloor > 0;
+        bool aIsUnderground = aFloor < 0;
+        bool bIsUnderground = bFloor < 0;
+
+        // 지상층끼리 비교 (높은 층부터)
+        if (aIsAboveGround && bIsAboveGround) {
+          return bFloor.compareTo(aFloor); // 내림차순
+        }
+
+        // 지하층끼리 비교 (높은 층부터, 지하는 음수이므로 큰 값이 높은 층)
+        if (aIsUnderground && bIsUnderground) {
+          return bFloor.compareTo(aFloor); // 내림차순
+        }
+
+        // 지상층이 지하층보다 먼저
+        if (aIsAboveGround && bIsUnderground) return -1;
+        if (aIsUnderground && bIsAboveGround) return 1;
+
+        // 기타층 (0층)들은 seq 큰 순서부터
+        if (!aIsAboveGround &&
+            !aIsUnderground &&
+            !bIsAboveGround &&
+            !bIsUnderground) {
+          int aSeq = int.parse(a.seq ?? "0");
+          int bSeq = int.parse(b.seq ?? "0");
+          return bSeq.compareTo(aSeq); // 내림차순
+        }
+
+        // 지상층이 기타층보다 먼저
+        if (aIsAboveGround && !bIsAboveGround && !bIsUnderground) return -1;
+        if (!aIsAboveGround && !aIsUnderground && bIsAboveGround) return 1;
+
+        // 지하층이 기타층보다 먼저
+        if (aIsUnderground && !bIsAboveGround && !bIsUnderground) return -1;
+        if (!aIsAboveGround && !aIsUnderground && bIsUnderground) return 1;
+
+        return 0;
       },
     );
   }
