@@ -54,43 +54,6 @@ class DrawingDetailView extends GetView<DrawingDetailController> {
                         ),
                       )),
 
-                  // Visibility(
-                  //   visible: !controller.isDrawingSelected.value,
-                  //   child: Align(
-                  //       alignment: Alignment.bottomRight,
-                  //       child: Container(
-                  //         padding: EdgeInsets.only(bottom: 16.0, right: 16.0),
-                  //         child: InkWell(
-                  //           onTap: () {
-                  //             controller.addFault();
-                  //           },
-                  //           child: Container(
-                  //             height: 50,
-                  //             width: 50,
-                  //             decoration: BoxDecoration(
-                  //               color: AppColors.c4,
-                  //               boxShadow: [
-                  //                 BoxShadow(color: Colors.black.withOpacity(0.1), offset: Offset(0, 1), blurRadius: 2, spreadRadius: -1),
-                  //                 BoxShadow(color: Colors.black.withOpacity(0.1), offset: Offset(0, 1), blurRadius: 3, spreadRadius: 0),
-                  //                 BoxShadow(color: Colors.black.withOpacity(0.1), offset: Offset(0, 4), blurRadius: 6, spreadRadius: -4),
-                  //                 BoxShadow(color: Colors.black.withOpacity(0.1), offset: Offset(0, 10), blurRadius: 15, spreadRadius: -3),
-                  //               ],
-                  //               borderRadius: BorderRadius.circular(24),
-                  //             ),
-                  //             child: Row(
-                  //               mainAxisAlignment: MainAxisAlignment.center,
-                  //               children: [
-                  //                 Icon(CupertinoIcons.plus,
-                  //                   color: Colors.white,
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ),
-                  //         ),
-                  //         ),
-                  //       ),
-                  // ),
-
                   // 속성창 닫는 검은 영역
                   Visibility(
                     visible: controller.appService.isFaultSelected.value ||

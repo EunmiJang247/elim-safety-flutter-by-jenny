@@ -52,7 +52,7 @@ class InspectionData {
 class Children {
   final String kind;
   final List<Picture> pictures;
-  final String? remark;
+  String? remark;
 
   Children({
     required this.kind,

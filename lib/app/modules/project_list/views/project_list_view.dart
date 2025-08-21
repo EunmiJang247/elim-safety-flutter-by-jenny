@@ -19,6 +19,7 @@ class ProjectListView extends GetView<ProjectListController> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Obx(() => PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) {
@@ -170,7 +171,7 @@ class ProjectListView extends GetView<ProjectListController> {
                       ],
                     ),
                     rightSide: Container(
-                      width: 300,
+                      width: (screenWidth >= 768) ? 300 : 150,
                       padding:
                           EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
@@ -306,8 +307,12 @@ class ProjectListView extends GetView<ProjectListController> {
                                         child: Row(
                                           children: [
                                             Container(
-                                                width: 200,
-                                                height: 140,
+                                                width: (screenWidth >= 768)
+                                                    ? 200
+                                                    : 120,
+                                                height: (screenWidth >= 768)
+                                                    ? 140
+                                                    : 70,
                                                 margin:
                                                     EdgeInsets.only(right: 20),
                                                 child: ClipRRect(
@@ -484,6 +489,33 @@ class ProjectListView extends GetView<ProjectListController> {
                                                       ),
                                                     ],
                                                   ),
+                                                  if (screenWidth < 768)
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                            managers.isNotEmpty
+                                                                ? managers.first
+                                                                : "담당 인원 없음",
+                                                            style: TextStyle(
+                                                              fontFamily:
+                                                                  "Pretendard",
+                                                              fontSize: 16,
+                                                            )),
+                                                        Visibility(
+                                                          visible: managers
+                                                                  .isNotEmpty &&
+                                                              managers.length >
+                                                                  1,
+                                                          child: Text(
+                                                              " 외 ${managers.length - 1}명",
+                                                              style: TextStyle(
+                                                                fontFamily:
+                                                                    "Pretendard",
+                                                                fontSize: 16,
+                                                              )),
+                                                        ),
+                                                      ],
+                                                    ),
                                                 ],
                                               ),
                                             ),
@@ -529,27 +561,15 @@ class ProjectListView extends GetView<ProjectListController> {
                                                             size: 20,
                                                           ),
                                                           Gaps.w8,
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                  managers.isNotEmpty
-                                                                      ? managers
-                                                                          .first
-                                                                      : "담당 인원 없음",
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontFamily:
-                                                                        "Pretendard",
-                                                                    fontSize:
-                                                                        16,
-                                                                  )),
-                                                              Visibility(
-                                                                visible: managers
-                                                                        .isNotEmpty &&
-                                                                    managers.length >
-                                                                        1,
-                                                                child: Text(
-                                                                    " 외 ${managers.length - 1}명",
+                                                          if (screenWidth >=
+                                                              768)
+                                                            Row(
+                                                              children: [
+                                                                Text(
+                                                                    managers.isNotEmpty
+                                                                        ? managers
+                                                                            .first
+                                                                        : "담당 인원 없음",
                                                                     style:
                                                                         TextStyle(
                                                                       fontFamily:
@@ -557,9 +577,23 @@ class ProjectListView extends GetView<ProjectListController> {
                                                                       fontSize:
                                                                           16,
                                                                     )),
-                                                              ),
-                                                            ],
-                                                          ),
+                                                                Visibility(
+                                                                  visible: managers
+                                                                          .isNotEmpty &&
+                                                                      managers.length >
+                                                                          1,
+                                                                  child: Text(
+                                                                      " 외 ${managers.length - 1}명",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontFamily:
+                                                                            "Pretendard",
+                                                                        fontSize:
+                                                                            16,
+                                                                      )),
+                                                                ),
+                                                              ],
+                                                            ),
                                                         ],
                                                       ),
                                                     ),

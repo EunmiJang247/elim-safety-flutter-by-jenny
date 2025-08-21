@@ -558,13 +558,11 @@ class FaultItemCard extends StatelessWidget {
           ),
         ),
         Visibility(
-          visible: appService.displayingFid[fault.group_fid] == fault.fid,
-          child: Icon(
-            Icons.visibility,
-            color: AppColors.c4,
-            size: 20,
-          ),
-        )
+            visible: appService.displayingFid[fault.group_fid] == fault.fid,
+            child: Text(
+              fault.structure ?? "미지정",
+              style: TextStyle(fontSize: 12),
+            ))
       ],
     );
   }

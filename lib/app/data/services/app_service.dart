@@ -980,26 +980,82 @@ class AppService extends GetxService {
     return resizedFile;
   }
 
+  // Future<String> savePhotoToExternal(File photo) async {
+  //   // 사진 저장할 디렉토리 경로 생성
+  //   final Directory? appPicturesDir = await getExternalStorageDirectory();
+  //   final String rootPath =
+  //       appPicturesDir!.path.split("/").sublist(0, 4).join('/');
+  //   final String targetPath = join(rootPath, 'Pictures/Elim/Safety');
+  //   final Directory targetDir = Directory(targetPath);
+
+  //   // 디렉토리가 없으면 생성
+  //   if (!await targetDir.exists()) {
+  //     await targetDir.create(recursive: true);
+  //   }
+
+  //   // 촬영된 사진 파일 저장
+  //   final String fileName = basename(photo.path); // 원본 파일 이름 가져오기
+  //   final String savedFilePath = join(targetDir.path, fileName);
+
+  //   // 파일 복사
+  //   await File(photo.path).copy(savedFilePath);
+  //   Fluttertoast.showToast(msg: "사진이 태블릿에 저장되었습니다.");
+  //   return savedFilePath;
+  // }
+
   Future<String> savePhotoToExternal(File photo) async {
-    // 사진 저장할 디렉토리 경로 생성
-    final Directory? appPicturesDir = await getExternalStorageDirectory();
-    final String rootPath =
-        appPicturesDir!.path.split("/").sublist(0, 4).join('/');
-    final String targetPath = join(rootPath, 'Pictures/Elim/Safety');
-    final Directory targetDir = Directory(targetPath);
+    try {
+      Directory? targetDir;
+      String message = "error";
 
-    // 디렉토리가 없으면 생성
-    if (!await targetDir.exists()) {
-      await targetDir.create(recursive: true);
+      if (Platform.isAndroid) {
+        // Android: External Storage 사용
+        final Directory? appPicturesDir = await getExternalStorageDirectory();
+        if (appPicturesDir != null) {
+          final String rootPath =
+              appPicturesDir.path.split("/").sublist(0, 4).join('/');
+          final String targetPath = join(rootPath, 'Pictures/Elim/Safety');
+          targetDir = Directory(targetPath);
+          message = "사진이 태블릿에 저장되었습니다.";
+        }
+      } else if (Platform.isIOS) {
+        // iOS: Documents Directory 사용
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        final String targetPath =
+            join(appDocDir.path, 'Pictures', 'Elim', 'Safety');
+        targetDir = Directory(targetPath);
+        message = "사진이 기기에 저장되었습니다.";
+      }
+
+      if (targetDir == null) {
+        // 폴백: 임시 디렉토리 사용
+        final Directory tempDir = await getTemporaryDirectory();
+        targetDir = Directory(join(tempDir.path, 'Pictures', 'Elim', 'Safety'));
+        message = "사진이 임시 저장되었습니다.";
+      }
+
+      // 디렉토리가 없으면 생성
+      if (!await targetDir.exists()) {
+        await targetDir.create(recursive: true);
+      }
+
+      // 촬영된 사진 파일 저장
+      final String fileName = basename(photo.path);
+      final String savedFilePath = join(targetDir.path, fileName);
+
+      // 파일 복사
+      await File(photo.path).copy(savedFilePath);
+
+      Fluttertoast.showToast(msg: message);
+      print("✅ 사진 저장 완료: $savedFilePath");
+
+      return savedFilePath;
+    } catch (e) {
+      print("❌ 사진 저장 실패: $e");
+
+      // 오류 시 원본 경로 반환
+      Fluttertoast.showToast(msg: "사진 저장에 실패했습니다. 원본 경로를 사용합니다.");
+      return photo.path;
     }
-
-    // 촬영된 사진 파일 저장
-    final String fileName = basename(photo.path); // 원본 파일 이름 가져오기
-    final String savedFilePath = join(targetDir.path, fileName);
-
-    // 파일 복사
-    await File(photo.path).copy(savedFilePath);
-    Fluttertoast.showToast(msg: "사진이 태블릿에 저장되었습니다.");
-    return savedFilePath;
   }
 }
