@@ -26,7 +26,7 @@ abstract class AppRestAPI {
   @GET("/safety/project_list")
   Future<BaseResponse?> getProjectList(@Queries() Map<String, dynamic> queries);
 
-  @POST("/safety/project_submit") // 수정
+  @POST("/safety/project_submit")
   Future<BaseResponse?> submitProject(@Queries() Map<String, dynamic> queries);
 
   @GET("/safety/drawing_list")

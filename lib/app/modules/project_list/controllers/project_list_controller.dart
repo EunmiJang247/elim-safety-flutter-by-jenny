@@ -10,6 +10,7 @@ import '../../../routes/app_pages.dart';
 
 class ProjectListController extends GetxController {
   final AppService appService;
+  final LocalGalleryDataService localGalleryDataService;
   final LocalGalleryDataService localLocalGalleryDataService =
       Get.find<LocalGalleryDataService>();
   TextEditingController searchController = TextEditingController();
@@ -18,10 +19,12 @@ class ProjectListController extends GetxController {
   String searchKeyword = "";
 
   bool get offlineMode => appService.isOfflineMode.value;
-  ProjectListController({required this.appService});
+  ProjectListController({
+    required this.appService,
+    required LocalGalleryDataService localGalleryDataService,
+  }) : localGalleryDataService = localGalleryDataService;
 
   ScrollController scrollController = ScrollController();
-
   @override
   Future<void> onInit() async {
     appService.isProjectInfoPage = false;

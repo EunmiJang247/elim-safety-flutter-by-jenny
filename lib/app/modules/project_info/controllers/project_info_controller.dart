@@ -269,6 +269,7 @@ class ProjectInfoController extends GetxController {
 
   // 현장점검표
   goCheckList() {
+    _localGalleryDataService.fetchGalleryPictures();
     Get.toNamed(Routes.PROJECT_CHECK_LIST);
   }
 
