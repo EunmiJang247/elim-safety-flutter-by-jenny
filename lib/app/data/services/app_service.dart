@@ -122,6 +122,8 @@ class AppService extends GetxService {
   }
 
   String createId() {
+    // 마커 id 만드는 함수에 쓰임
+    // 현재 시각(년/월/일/시/분/초/밀리초)을 가져와서 숫자 문자열만 남겨 반환한다
     return DateTime.now().toString().replaceAll(RegExp(r"[\s-:.]"), "");
   }
 

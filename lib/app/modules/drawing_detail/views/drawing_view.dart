@@ -27,17 +27,30 @@ class _DrawingViewState extends State<DrawingView> {
   DrawingDetailController drawingDetailController = Get.find();
   TransformationController transformationController =
       TransformationController();
+  // InteractiveViewer의 확대/축소, 이동(transform) 상태를 제어·관찰하는 컨트롤러를 생성
   GlobalKey drawingKey = GlobalKey();
+  // 특정 위젯(여기서는 도면/이미지 컨테이너)에 전역적으로 접근하기 위한 키
+  // 이 키로 RenderBox를 얻어 위젯의 실제 크기/좌표를 계산하거나 context에 접근할 수 있다
   Image image = Image.network("");
+  // 도면(이미지)을 화면에 띄우기 위해 Image 위젯을 미리 선언
   late ImageStream imageStream;
+  // Image 위젯은 내부적으로 이미지를 디코딩할 때 ImageStream을 통해 비트맵 데이터를 흘려보냅니다
   late ImageStreamListener imageStreamListener;
+  // imageStream에 리스너를 달아서 콜백을 받는 역할을 합니다
+  // onImage → 실제 픽셀이 준비되었을 때 실행 / onError → 로딩 실패했을 때 실행
   bool isLoaded = false;
 
   List<Widget> lines = [];
+  // 연결선(CustomPaint 등)들을 담아둘 리스트
   Offset topLeftOffset = Offset.zero;
+  // 현재 화면에서 보이는 도면의 왼쪽 위 좌표를 저장
   Map<String, String> bfMarkerPosition = {};
+  // before marker position (마커 이전 위치) 저장용 맵
+  // 마커를 드래그해서 움직이기 전의 원래 x, y 좌표를 임시로 저장해 둡니다
   Map<String, String> bfFaultPosition = {};
+  // before fault position (결함 아이콘 이전 위치) 저장용 맵.
   double maxScale = 10;
+  // InteractiveViewer에서 도면을 최대로 확대할 수 있는 배율
   double positionWeight = 0;
   double currentScale = 1;
   double scaleStd = 1.7;
@@ -92,11 +105,14 @@ class _DrawingViewState extends State<DrawingView> {
     });
   }
 
-  // 기기의 값을 디비에 맞게 변경
   List<String> convertDVtoDB({double? x, double? y}) {
+    // 화면 좌표(DV, Device View) → DB 좌표(DB, 비율 좌표) 변환
     List<String> result = [];
+    // 변환된 좌표를 담을 빈 리스트 생성
     if (x != null) {
       result.add((x / drawingDetailController.drawingWidth).toString());
+      // 현재 도면의 실제 화면 너비(drawingWidth)로 나눔 → 0~1 사이의 비율로 변환
+      // 예: 도면 너비가 1000이고, x = 250이면 → "0.25"
     }
     if (y != null) {
       result.add((y / drawingDetailController.drawingHeight).toString());
@@ -106,17 +122,6 @@ class _DrawingViewState extends State<DrawingView> {
 
   // 디비의 값을 기기에 맞게 변경
   Offset convertDBtoDV({String? x, String? y}) {
-    // double rx = 0;
-    // double ry = 0;
-    // if (x != null) {
-    //   rx = double.parse(x);
-    // }
-    // if (y != null) {
-    //   ry = double.parse(y);
-    // }
-    // return Offset(drawingDetailController.drawingWidth * rx,
-    //     drawingDetailController.drawingHeight * ry);
-
     bool isMoving = drawingDetailController.isMovingNumOrFault.value;
 
     // 성능 헬퍼 사용
@@ -157,21 +162,28 @@ class _DrawingViewState extends State<DrawingView> {
   bool areMarkersOverlapping(Marker marker1, Marker marker2) {
     Offset m1P = convertDBtoDV(x: marker1.x, y: marker1.y);
     Offset m2P = convertDBtoDV(x: marker2.x, y: marker2.y);
+    // convertDBtoDV: 데이터베이스(DB)에 저장된 좌표(x, y)를 디바이스 화면 좌표(Offset)로 변환
 
     // 두 마커의 중심 간 거리 계산
     double distance = (m1P - m2P).distance;
 
     // 두 마커의 반지름을 더한 값과 거리 비교
-    return distance < drawingDetailController.markerSize;
+    return distance < drawingDetailController.markerSizeUi;
+    // drawingDetailController.markerSizeUi는 마커의 지름을 의미한
   }
 
   @override
   void initState() {
     transformationController.addListener(updateInfos);
+    // 확대/축소, 드레그 상태가 변할때마다 updateInfos() 호출
+    // TransformationController는 Flutter 프레임워크의 일부로,
+    // InteractiveViewer 위젯과 함께 사용하기 위해 설계된 컨트롤러
+    // InteractiveViewer의 변환 상태(확대, 축소, 이동 등)를 제어하고 관찰할 수 있도록 설계됨
     super.initState();
 
     image = Image.network(
       key: drawingKey,
+      // GlobalKey를 사용하여 이 이미지 위젯에 전역적으로 접근할 수 있도록 설정
       drawingDetailController.drawingUrl ?? "",
     );
     imageStream = image.image.resolve(ImageConfiguration());
@@ -196,7 +208,7 @@ class _DrawingViewState extends State<DrawingView> {
     // 상태 관련 값 한 번에 업데이트
     currentScale = transformationController.value.getMaxScaleOnAxis();
     positionWeight =
-        (drawingDetailController.markerSize * 0.5) * (1 - 1 / currentScale);
+        (drawingDetailController.markerSizeUi * 0.5) * (1 - 1 / currentScale);
 
     final vector.Vector3 translation =
         transformationController.value.getTranslation();
@@ -252,6 +264,9 @@ class _DrawingViewState extends State<DrawingView> {
 
   @override
   Widget build(BuildContext context) {
+    // UI 스케일 업데이트
+    drawingDetailController.updateUiScale(context);
+
     // 디바이스 회전 또는 화면 크기 변경 감지
     final currentSize = MediaQuery.of(context).size;
 
@@ -269,6 +284,9 @@ class _DrawingViewState extends State<DrawingView> {
     }
 
     return RepaintBoundary(
+      // RepaintBoundary는 Flutter에서 렌더링 성능 최적화와 위젯 독립성을 위해 쓰는 위젯
+      // DrawingView 안에는 InteractiveViewer, 마커, 결함, 메모 등 계속 변하는 많은 위젯이 있어요
+      // RepaintBoundary를 사용하면 "이 Container 단위로만 다시 그림" → 다른 화면 위젯들은 건드리지 않음
       child: Container(
         height: MediaQuery.of(context).size.height - appBarHeight,
         width: MediaQuery.of(context).size.width - leftBarWidth,
@@ -276,43 +294,60 @@ class _DrawingViewState extends State<DrawingView> {
         child: Stack(
           children: [
             Obx(() => InteractiveViewer(
+                  // Flutter의 기본 위젯으로, 확대/축소(zoom), 드래그(pan) 같은 제스처를 지원
                   transformationController: transformationController,
+                  // 확대/이동 상태를 추적하거나, 코드로 직접 조정할 수 있게 연결한 컨트롤러
                   maxScale: maxScale,
+                  // 최대 확대 배율 제한 (여기선 10).
                   child: Align(
                     alignment: Alignment.center,
                     child: Stack(
                         children: <Widget>[
                               GestureDetector(
                                 onTapDown: (details) {
+                                  // 메모 추가 기능
                                   if (drawingDetailController
                                       .addMemoMode.value) {
+                                    // 조건: addMemoMode(메모 추가 모드)가 켜져 있을 때만 동작
                                     Offset localPosition =
                                         details.localPosition;
+                                    // 사용자가 터치한 좌표(details.localPosition)를 가져옴.
                                     List<String> newPosition = convertDVtoDB(
                                         x: localPosition.dx,
                                         y: localPosition.dy - verticalPadding);
-
+                                    // convertDVtoDB를 써서 디바이스 좌표를 DB 저장용 좌표로 변환
                                     drawingDetailController.makeNewDrawingMemo(
                                       newPosition[0],
                                       newPosition[1],
                                     );
+                                    // 컨트롤러의 makeNewDrawingMemo()를 호출해서 새 메모 아이콘 생성
                                   }
                                 },
                                 onLongPressStart: (details) {
+                                  // 길게 누르면
                                   if (currentScale >= scaleStd) {
+                                    // 조건: 현재 확대 배율(currentScale)이 기준 배율(scaleStd, 예: 1.7) 이상일 때만 동작.
+                                    // 충분히 확대했을 때만 결함/마커 같은 세밀한 조작을 허용한다는 의미
                                     Offset localPosition =
                                         details.localPosition;
-                                    // print(localPosition);
+                                    // details.localPosition → 터치된 위치 (도면 내부의 좌표, 픽셀 단위).
                                     List<String> newPosition = convertDVtoDB(
                                         x: localPosition.dx,
                                         y: localPosition.dy - verticalPadding);
+                                    // 도면 위젯의 상단 여백(verticalPadding)을 보정하기 위해서 빼는 것!
                                     String mfGap = convertDVtoDB(
                                             y: drawingDetailController
-                                                    .markerSize *
+                                                    .markerSizeUi *
                                                 1.2)
+                                        // 마커 크기(markerSizeUi)에 1.2를 곱하여 약간 더 큰 값을 계산한다
+                                        // 이 y크기를 데이터베이스로 바꾼다.
+                                        // 예를 들어, markerSizeUi * 1.2가 120이고 도면 높이가 1000이라면, 반환값은 0.12가 됩니다
                                         .first;
                                     drawingDetailController.onLongPress(
-                                        newPosition, mfGap);
+                                        // onLongPress 함수를 실행한다
+                                        // 새로운 위치와 마커 간격을 전달한다
+                                        newPosition,
+                                        mfGap);
                                   }
                                 },
                                 onDoubleTap: () => setState(() {
@@ -345,9 +380,10 @@ class _DrawingViewState extends State<DrawingView> {
                               Visibility(
                                   visible: !isLoaded,
                                   child: Container(
-                                      width: drawingDetailController.markerSize,
+                                      width:
+                                          drawingDetailController.markerSizeUi,
                                       height:
-                                          drawingDetailController.markerSize,
+                                          drawingDetailController.markerSizeUi,
                                       color: Colors.black))
                             ]),
                   ),
@@ -442,12 +478,15 @@ class _DrawingViewState extends State<DrawingView> {
 
   // 마커 표시 위젯
   List<Widget> _buildMarkers() {
+    // 빌드해서 반환할 위젯들을 담는 리스트
     List<Widget> result = [];
 
+    // 화면에 표시할 모든 마커를 순회
     for (final data in drawingDetailController.markerList) {
+      // 이 마커의 위치를 포커싱 등에서 쓰기 위한 GlobalKey (크기/위치 참조 용)
       GlobalKey globalKey = GlobalKey();
 
-      // 위치 계산
+      // 위치 계산: DB에 저장된 비율 좌표(x,y)를 현재 기기 화면 좌표(Offset)로 변환
       Offset mPosition = convertDBtoDV(x: data.x!, y: data.y!);
 
       // 색상 계산 캐싱
@@ -467,14 +506,20 @@ class _DrawingViewState extends State<DrawingView> {
         textColor = textColor.withOpacity(opac);
       }
 
+      // 실제로 그릴 마커 하나를 result에 추가
       result.add(Visibility(
         visible: isLoaded,
+        // isLoaded(이미지/도면이 로딩 완료되었는지)에 따라 보이기/숨기기
         child: Positioned(
-            left: mPosition.dx -
-                drawingDetailController.markerSize / 2 -
+            // 마커 박스의 left/top 좌표: 마커 중심 기준에서 반지름만큼 빼고, 터치 여유(touchRange)도 반영
+            left: mPosition.dx - // 마커의 중심 좌표의 x값
+                drawingDetailController.markerSizeUi / 2 -
+                // 마커의 크기(markerSizeUi)의 절반입니다
+                //마커의 중심 좌표(mPosition.dx)에서 마커의 반지름만큼 빼면 마커의 좌측 경계선(left)을 구할 수 있습니다
                 touchRange,
+            //터치 여유 공간입니다. 사용자가 마커를 쉽게 선택하거나 조작할 수 있도록 마커 주변에 추가적인 여유 공간을 제공합니다
             top: mPosition.dy -
-                drawingDetailController.markerSize / 2 -
+                drawingDetailController.markerSizeUi / 2 -
                 touchRange +
                 verticalPadding,
             child: GestureDetector(
@@ -482,22 +527,30 @@ class _DrawingViewState extends State<DrawingView> {
                 // focusOnSpot(globalKey, Offset(double.parse(data.x!) - drawingDetailController.markerSize/2, double.parse(data.y!) - drawingDetailController.markerSize/2));
                 drawingDetailController.selectedMarker.value = data;
                 drawingDetailController.isNumberSelected.value = true;
+                // 숫자 선택 상태(isNumberSelected)를 false로 설정
               },
               onLongPressStart: (details) {
+                // onLongPressStart: 터치 이벤트의 위치 정보(localPosition, globalPosition 등)를 포함합니다
                 if (currentScale >= scaleStd) {
+                  // 현재 화면의 확대 배율(currentScale)이 기준 배율(scaleStd) 이상인지 확인
                   if (!drawingDetailController.isMovingNumOrFault.value) {
                     drawingDetailController.isMovingNumOrFault.value = true;
+                    // isMovingNumOrFault는 마커나 결함이 이동 중인지 여부를 나타내는 상태 변수를 true로
                   }
 
                   drawingDetailController.selectedMarker.value = data;
                   drawingDetailController.isNumberSelected.value = false;
+                  // 숫자 선택 상태(isNumberSelected)를 false로 설정
 
                   bfMarkerPosition["x"] = data.x!;
                   bfMarkerPosition["y"] = data.y!;
+                  // bfMarkerPosition는 마커의 이전 위치를 저장하는 맵입니다
+
+                  print("bfMarkerPosition: $bfMarkerPosition");
 
                   Offset markerCenter = Offset(
-                      drawingDetailController.markerSize / 2 + touchRange,
-                      drawingDetailController.markerSize / 2 + touchRange);
+                      drawingDetailController.markerSizeUi / 2 + touchRange,
+                      drawingDetailController.markerSizeUi / 2 + touchRange);
 
                   touchWeightX = details.localPosition.dx - markerCenter.dx;
                   touchWeightY = details.localPosition.dy - markerCenter.dy;
@@ -556,16 +609,16 @@ class _DrawingViewState extends State<DrawingView> {
                 bfMarkerPosition.remove("y");
               },
               child: SizedBox(
-                width: drawingDetailController.markerSize + touchRange * 2,
-                height: drawingDetailController.markerSize + touchRange * 2,
+                width: drawingDetailController.markerSizeUi + touchRange * 2,
+                height: drawingDetailController.markerSizeUi + touchRange * 2,
                 child: Stack(
                   children: [
                     Center(
                       child: Container(
-                        width:
-                            drawingDetailController.markerSize + touchRange * 2,
-                        height:
-                            drawingDetailController.markerSize + touchRange * 2,
+                        width: drawingDetailController.markerSizeUi +
+                            touchRange * 2,
+                        height: drawingDetailController.markerSizeUi +
+                            touchRange * 2,
                         decoration: BoxDecoration(
                             color: Colors.transparent,
                             borderRadius: BorderRadius.circular(10)),
@@ -574,8 +627,8 @@ class _DrawingViewState extends State<DrawingView> {
                     Center(
                       child: Container(
                         key: globalKey,
-                        width: drawingDetailController.markerSize,
-                        height: drawingDetailController.markerSize,
+                        width: drawingDetailController.markerSizeUi,
+                        height: drawingDetailController.markerSizeUi,
                         padding: EdgeInsets.only(top: 0),
                         decoration: BoxDecoration(
                           color: foregroundColor,
@@ -588,7 +641,7 @@ class _DrawingViewState extends State<DrawingView> {
                               ? BorderRadius
                                   .zero // Square shape if any fault has pictures
                               : BorderRadius.circular(
-                                  drawingDetailController.markerSize /
+                                  drawingDetailController.markerSizeUi /
                                       2), // Circle shape if no pictures
                         ),
                         child: Align(
@@ -615,11 +668,12 @@ class _DrawingViewState extends State<DrawingView> {
                                 fontSize: (int.parse(data.no!) > 100)
                                     ? max(
                                         6,
-                                        drawingDetailController.markerSize / 3,
+                                        drawingDetailController.markerSizeUi /
+                                            3,
                                       )
                                     : max(
                                         6,
-                                        drawingDetailController.markerSize /
+                                        drawingDetailController.markerSizeUi /
                                             2.5,
                                       ),
                                 fontWeight: FontWeight.bold,
@@ -644,10 +698,15 @@ class _DrawingViewState extends State<DrawingView> {
   List<Widget> _buildFaults() {
     return drawingDetailController.markerList
         .map((marker) {
+          print("marker: ${marker.toJson()}");
           if (currentScale < scaleStd) {
-            faultSize = drawingDetailController.faultSize;
+            // 현재 배율(currentScale)이 기준(scaleStd)보다 작은 경우,
+            // 세밀 조작 비활성화, 결함 크기도 크게 보이도록 유지.
+            faultSize = drawingDetailController.faultSizeUi;
           } else {
-            faultSize = drawingDetailController.faultSize - 3 / currentScale;
+            // 확대 되어 있는 경우
+            //
+            faultSize = drawingDetailController.faultSizeUi - 3 / currentScale;
           }
           return marker.fault_list?.map(
             (fault) {

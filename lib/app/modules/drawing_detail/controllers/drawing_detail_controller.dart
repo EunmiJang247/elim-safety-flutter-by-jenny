@@ -87,6 +87,20 @@ class DrawingDetailController extends GetxController {
   String get imageDescription => appService.drawingName;
   List<ElementList>? get elements => appService.elements;
 
+  double _uiScale = 1.0; // tablet=1.0, phone=0.5
+
+  void updateUiScale(BuildContext context) {
+    // 반응형 UI 스케일링을 위한 코드
+    double screenWidth = MediaQuery.of(context).size.width;
+    _uiScale = screenWidth < 768 ? 0.5 : 1.0;
+    // 핸드폰이면 _uiScale을 0.5로 한다
+  }
+
+  // 표시용 getter (서버/모델에 저장되는 원래 값은 markerSize, fontSize, faultSize 그대로 둠)
+  double get markerSizeUi => markerSize * _uiScale;
+  double get fontSizeUi => fontSize * _uiScale;
+  double get faultSizeUi => faultSize * _uiScale;
+
   @override
   void onInit() async {
     cScrollController = ScrollController();
@@ -101,13 +115,21 @@ class DrawingDetailController extends GetxController {
 
     appService.curDrawing.value = Get.arguments as Drawing;
     drawingUrl = appService.curDrawing.value.file_path;
-    markerSize = double.parse(appService.curDrawing.value.marker_size ?? "20");
+    markerSize = double.parse(appService.curDrawing.value.marker_size ?? "8");
+
+    // UI 스케일 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.context != null) {
+        updateUiScale(Get.context!);
+      }
+    });
+
     await fetchData();
     if (markerList.isNotEmpty) {
-      markerSize = double.parse(markerList.first.size ?? "20");
+      markerSize = double.parse(markerList.first.size ?? "8");
     }
     fontSize = 16 * markerSize / 32;
-    faultSize = markerSize / 4;
+    faultSize = markerSize / 6;
     countFaults();
     super.onInit();
   }
@@ -193,7 +215,7 @@ class DrawingDetailController extends GetxController {
     isNumberSelected.value = false;
     markerSize = value!.toDouble();
     fontSize = 16 * markerSize / 32;
-    faultSize = markerSize / 4;
+    faultSize = markerSize / 6;
     editMarker(selectedMarker.value);
     isNumberSelected.value = true;
     DrawingListController drawingListController = Get.find();
@@ -205,6 +227,8 @@ class DrawingDetailController extends GetxController {
   // 번호별 결함 수 확인
   // 번호별 결함 수 확인 메서드 수정
   void countFaults() {
+    // 현재 마커들(markerList)에 연결된 결함(fault)들을 전부 세고, 정리해서 테이블 구조(tableData)로 만들어줌
+    // 마커와 결함 데이터를 화면에 뿌릴 수 있도록 가공하는 정리용 함수
     String markerNo = "";
     tableMarkerData.value = {};
     appService.displayingFid = {};
@@ -283,10 +307,16 @@ class DrawingDetailController extends GetxController {
         }
       }
     }
+    // print("markersByDongAndFloor: ${markersByDongAndFloor}");
+    // flutter: markersByDongAndFloor: {1: {1: [Instance of 'Marker', Instance of 'Marker']}}
   }
 
   Future<void> onLongPress(List<String> position, String mfGap) async {
+    // flutter: position , [0.8650227197032764, 0.5094069594903716]
+    // flutter: mfGap , 0.11009174311926606
     String? mid = await addMarker(position, mfGap);
+    // 마커 추가 함수를 실행한다
+    // marker의 아이디를 반환한다
     await addFault(position, mid);
   }
 
@@ -303,25 +333,40 @@ class DrawingDetailController extends GetxController {
 
   // 마커 추가
   Future<String?> addMarker(List<String> position, String mfGap) async {
+    // (마커 ID)를 문자열로 반환
     var mid = appService.createId();
     Marker newMarker = Marker(
+        // 객체를 새로 생성하는 코드
         drawing_seq: appService.curDrawing.value.seq,
+        // 도면 번호
         x: position[0],
+        // 새 마커의 X 좌표
         y: (double.parse(position[1]) - double.parse(mfGap)).toString(),
+        // position[1]에서 mfGap만큼 뺌.
+        // mfGap: 마커와 결함 표시 사이의 간격 (비율 값)
+        // 즉, 마커가 사용자가 터치한 지점보다 살짝 위에 찍히도록 조정
         mid: mid);
     String? lastFaultSeq;
+    // 결함(fault) 리스트에서 마지막 결함의 순번(seq)을 가져오는 로직
     if (faultList.isNotEmpty) {
       lastFaultSeq = faultList.last.seq;
     }
     Map? result = await appService.submitMarker(
-        isNew: true, marker: newMarker, lastFaultSeq: lastFaultSeq);
+        // 서버로 새 마커 등록 요청 보냄
+        isNew: true,
+        marker: newMarker,
+        lastFaultSeq: lastFaultSeq);
     if (result != null) {
       Marker resultMarker = result["marker"];
       resultMarker.fault_list = [];
+      // 방금 막 추가된 마커이기 때문에, 결함 리스트(fault_list)는 비워두고
       resultMarker.fault_cnt = 0;
+      // 결함 개수(fault_cnt)는 0으로 초기화
       markerList.add(resultMarker);
+      // 앱에서 관리하는 markerList(현재 화면에 표시되는 모든 마커 모음)에 새 마커를 추가
       if (result["appended"] != null) {
         applyChanges(result["appended"]);
+        // result["appended"]: 서버가 이번 요청 때문에 새로 추가되거나 변경된 데이터만 보내주는 것
       }
       countFaults();
       return result["marker"].mid ?? appService.createId();
@@ -481,9 +526,8 @@ class DrawingDetailController extends GetxController {
       List<Fault> faults = groupedByFid[groupFid]!;
       String newX = (double.tryParse(faults[0].x ?? "0")?.toStringAsFixed(5)) ??
           "0.00000";
-      String newY = (((double.tryParse(faults[0].y ?? "0") ?? 0) - 0.05)
-              .toStringAsFixed(5)) ??
-          "0.00000";
+      String newY = ((double.tryParse(faults[0].y ?? "0") ?? 0) - 0.05)
+          .toStringAsFixed(5);
       Marker newMarker = Marker(
         drawing_seq: originMarker.drawing_seq,
         x: newX,
@@ -544,6 +588,7 @@ class DrawingDetailController extends GetxController {
 
   // 테이블 결함 추가
   Future<void> addFault(List<String> position, String? mid) async {
+    // 도면의 특정 위치(마커)에 새 결함(Fault)을 추가하는 함수
     Fault newFault = Fault(qty: "1");
     String? lastFaultSeq;
     if (faultList.isNotEmpty) {
@@ -810,6 +855,10 @@ class DrawingDetailController extends GetxController {
   }
 
   void applyChanges(Appended appended) {
+    // 서버에서 추가로 전달된 데이터(Appended)를 앱 상태에 반영하는 역할
+    // 서버에서 넘어온 Appended 객체에는 새 마커 목록(markerList) 과 새 결함 목록(faultList) 이 들어 있음
+    print("appended ${appended.toJson()}");
+    // 새로 추가하면 : flutter: appended {markerList: null, faultList: null}
     List<Marker> newMarkers = appended.markerList ?? [];
     List<Fault> newFaults = appended.faultList ?? [];
 
@@ -820,6 +869,7 @@ class DrawingDetailController extends GetxController {
       );
       if (changed != null) {
         changed = marker;
+        // 앱이 임시로 만든 마커 객체(클라이언트 생성)와 서버가 내려준 정식 마커 객체(서버 확정 데이터)를 대체하는 과정
       } else {
         marker.fault_list = [];
         marker.fault_cnt = 0;
@@ -828,10 +878,15 @@ class DrawingDetailController extends GetxController {
     }
     // 마커 리스트 돌면서 해당 번호를 가진 결함 추가
     for (Fault fault in newFaults) {
+      // 서버에서 받은 새로운 Fault들을 순회
       for (Marker marker in markerList) {
+        // 현재 화면/리스트에 있는 모든 Marker들 순회
         if (marker.no == fault.marker_no) {
+          // Fault가 속해야 할 Marker 찾기 (번호 매칭)
           marker.fault_list!.add(fault);
+          // 해당 마커에 결함 추가
           if (marker.fault_cnt == null) {
+            // fault_cnt(결함 개수) 갱신
             marker.fault_cnt = 1;
           } else {
             marker.fault_cnt = marker.fault_list?.length ?? 0;
@@ -866,25 +921,44 @@ class DrawingDetailController extends GetxController {
 
   Future<CustomPicture?> takePicture(Fault? fault) async {
     // iOS/Android 카메라 권한 체크
-    var cameraStatus = await Permission.camera.status;
-    if (cameraStatus.isDenied) {
-      cameraStatus = await Permission.camera.request();
-    }
+    // 결함 drawer에서 사진 누르면 실행되는 함수
+    // var cameraStatus = await Permission.camera.status;
+    // print("🔍 카메라 권한 상태: $cameraStatus");
 
-    if (!cameraStatus.isGranted) {
-      if (cameraStatus.isPermanentlyDenied) {
-        _showPermissionDialog('카메라');
-      } else {
-        Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
-      }
-      return null;
-    }
+    // if (cameraStatus.isDenied) {
+    //   print("🔍 권한 요청 중...");
+    //   cameraStatus = await Permission.camera.request();
+    //   print("🔍 권한 요청 후 상태: $cameraStatus");
+    // }
+
+    // // 모든 권한 상태 체크
+    // print("🔍 isGranted: ${cameraStatus.isGranted}");
+    // print("🔍 isDenied: ${cameraStatus.isDenied}");
+    // print("🔍 isPermanentlyDenied: ${cameraStatus.isPermanentlyDenied}");
+    // print("🔍 isRestricted: ${cameraStatus.isRestricted}");
+    // print("🔍 isLimited: ${cameraStatus.isLimited}");
+
+    // if (!cameraStatus.isGranted) {
+    //   if (cameraStatus.isPermanentlyDenied) {
+    //     print("🔍 영구 거부됨 - 설정으로 이동");
+    //     _showPermissionDialog('카메라');
+    //   } else if (cameraStatus.isRestricted) {
+    //     print("🔍 제한됨 (부모 제어 등)");
+    //     Fluttertoast.showToast(msg: "카메라 접근이 제한되어 있습니다.");
+    //   } else {
+    //     print("🔍 권한 없음");
+    //     Fluttertoast.showToast(msg: "카메라 권한이 필요합니다.");
+    //   }
+    //   return null;
+    // }
+    // print("🔍 권한 확인됨 - 카메라 실행");
 
     XFile? xFile = await imagePicker.pickImage(
       source: ImageSource.camera,
       imageQuality: imageQuality,
       maxWidth: imageMaxWidth,
     );
+    print("🔍 선택된 이미지 파일: ${xFile?.path}");
     if (xFile != null) {
       // File file = await appService.compressImage(xImage);
       String savedFilePath =
