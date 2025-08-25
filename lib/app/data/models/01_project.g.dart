@@ -74,7 +74,7 @@ class ProjectAdapter extends TypeAdapter<Project> {
       picture: fields[54] as String?,
       before_list: (fields[55] as List?)
           ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
-          .toList(),
+          ?.toList(),
       manager_name: fields[56] as String?,
       attachment1: fields[57] as String?,
       attachment2: fields[58] as String?,

@@ -12,7 +12,6 @@ class _AppRestAPI implements AppRestAPI {
   _AppRestAPI(
     this._dio, {
     this.baseUrl,
-    // ignore: unused_element_parameter
     this.errorLogger,
   });
 
